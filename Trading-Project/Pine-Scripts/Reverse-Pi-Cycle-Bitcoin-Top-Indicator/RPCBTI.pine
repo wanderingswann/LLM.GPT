@@ -1,0 +1,103 @@
+//@version=5
+//
+// Reverse Pi Cycle Bitcoin Top Indicator
+// Much respect the creator of the Pi Cycle Top indicator idea Philip Swift 
+// I have based this indicator on the Pi Cycle Top Indicator by Tradingview Author Ninorigo
+//
+
+indicator ( 'CT Reverse Pi Cycle Bitcoin Top Indicator', 'CT R Pi Cycle', overlay=true )
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+i_long_ma_len   = input.int         ( 350,      'Long MA' )
+i_short_ma_len  = input.int         ( 111,      'Short MA' )
+i_show_ma       = input.bool        ( true,     'Show Moving Averages ?' )
+i_show_cross    = input.bool        ( true,     'Show cross level ?' )
+i_show_antic    = input.bool        ( false,    'Show Anticipated cross ?' )
+i_dec_places    = input.int         ( 2,        'Decimal Places',           minval=0, maxval=10 )
+i_lbl_offset    = input.int         ( 6,        'Label Offset',             minval=0, maxval=100 )
+i_lbl_bg_color  = input.color       (#FFFFFF, 'Label Text Color' )
+i_timeframe     = input.timeframe   ( 'D',      'Timeframe [default Daily]' )
+i_multiplier    = input.float       ( 2.0,      'Multiplier [default 2.0]', minval=0, maxval=10, step=0.01 )
+i_cross_up_on   = input.bool        ( true,     'Pi Cycle Top label On ?' )
+i_cross_down_on = input.bool        ( true,     'Crossback Label On?' )
+
+///////////////////////////////////////////////////////////////////////////////
+// Declare functions
+
+f_prior_sum ( p, x ) =>
+    math.sum(p[1], x - 1)
+
+f_pi_cycle_cross ( P, X, Y, m ) =>
+    (f_prior_sum(P, X) * Y * m - f_prior_sum(P, Y) * X) / (X - Y * m)
+
+f_anticipated_cross ( P, X, Y ) =>
+    (X * (Y - 1) * ta.sma(P, Y - 1) - Y * (X - 1) * ta.sma(P, X - 1) * 2) / (Y * 2 - X)
+
+f_percentage ( P, X ) =>
+    100 - P / X * 100
+
+f_cross_text ( p, x, d ) =>
+    p < x ? 'Pi Cycle Top Cross Above : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d)) : 'Pi Cycle Cross Down : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d))
+
+f_cross_text2 ( p, x, d ) =>
+    text_1 = i_show_antic and p < x ? '\n\n' + 'Anticipated Pi Cycle Top\nCross Above on next bar close\n' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d)) : i_show_antic ? '\n\n' + 'Anticipated Pi Cycle\n Cross Down on next bar close\n' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d)) : na
+    text_1
+
+f_percentage_text ( P, d ) =>
+    '\n\nPercentage = ' + str.tostring(int(P * math.pow(10, d)) / math.pow(10, d))
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+long_ma     = request.security(syminfo.tickerid, i_timeframe, ta.sma(close, i_long_ma_len) * i_multiplier)
+short_ma    = request.security(syminfo.tickerid, i_timeframe, ta.sma(close, i_short_ma_len))
+src_data    = request.security(syminfo.tickerid, i_timeframe, close)
+pi_cross    = request.security(syminfo.tickerid, i_timeframe, f_pi_cycle_cross(src_data, i_long_ma_len, i_short_ma_len, i_multiplier))
+antic_cross = request.security(syminfo.tickerid, i_timeframe, f_anticipated_cross(src_data, i_long_ma_len, i_short_ma_len))
+
+percentage  = f_percentage(close, pi_cross)
+label_text  = f_cross_text(src_data, pi_cross, i_dec_places) + f_cross_text2(src_data, antic_cross, i_dec_places) + f_percentage_text(percentage, i_dec_places)
+label_X_Loc = time_close + (time_close - time_close[1]) * i_lbl_offset  // Set Label offset
+
+pi_cycle_top  = ta.crossunder(long_ma, short_ma) ? src_data + src_data / 100 * 10 : na
+pi_cycle_down = ta.crossover(long_ma, short_ma) ? src_data - src_data / 100 * 20 : na
+
+pi_cycle_top2  = ta.crossunder(antic_cross, src_data) ? src_data + src_data / 100 * 90 : na
+pi_cycle_down2 = ta.crossover(antic_cross, src_data) ? src_data - src_data / 100 * 70 : na
+
+///////////////////////////////////////////////////////////////////////////////
+// Plots and background signals
+
+plot    ( i_show_ma ? long_ma : na,         'Long MA', color.new ( color.green, 0))  // show the long MA
+plot    ( i_show_ma ? short_ma : na,        'Short MA', color.new ( color.orange, 0))  // show the short MA
+plot    ( i_show_cross ? pi_cross : na,     'MA Cross', color.new ( color.aqua, 0))  // show the MA cross level
+plot    ( i_show_antic ? antic_cross : na,  'Anticipated Cross', color.new ( color.fuchsia, 0), offset=1)  // show the anticipated MA cross level
+
+plotshape ( i_cross_up_on and i_show_antic and not pi_cycle_top ? pi_cycle_top2 : na, style=shape.labeldown, size=size.normal, text='Anticipated Pi Cycle top\n on next bar\n', color=color.new(color.red, 0), textcolor=color.new(color.white, 0), location=location.absolute)
+plotshape ( i_cross_down_on and i_show_antic and not pi_cycle_down ? pi_cycle_down2 : na, style=shape.labelup, size=size.normal, text='Anticipated Long MA above short MA \n on next bar\n', color=color.new(color.green, 0), textcolor=color.new(color.white, 0), location=location.absolute)
+plotshape ( i_cross_up_on ? pi_cycle_top : na, style=shape.labeldown, size=size.normal, text='Pi Cycle top', color=color.new(color.red, 0), textcolor=color.new(color.white, 0), location=location.absolute)
+plotshape ( i_cross_down_on ? pi_cycle_down : na, style=shape.labelup, size=size.normal, text='Long MA above short MA', color=color.new(color.green, 0), textcolor=color.new(color.white, 0), location=location.absolute)
+
+bgcolor ( i_cross_up_on and ta.crossunder(antic_cross, src_data) ? color.orange : na )
+bgcolor ( i_cross_down_on and ta.crossover(antic_cross, src_data) ? color.blue : na )
+bgcolor ( i_cross_up_on and ta.crossunder(long_ma, short_ma) ? color.red : na )
+bgcolor ( i_cross_down_on and ta.crossover(long_ma, short_ma) ? color.lime : na )
+
+///////////////////////////////////////////////////////////////////////////////
+// Label plot
+
+label = label.new(label_X_Loc, hlc3, label_text, xloc.bar_time, yloc.price, color.black, label.style_label_left, color.white, size=size.normal)  // Plot Label
+
+label.delete(label[1])  // Delete Previous Label
+
+///////////////////////////////////////////////////////////////////////////////
+// Label plot // note : the alertcondition does not start alerts but creates the condition. The alerts must always be created manually in the Create Alert dialog box
+
+alertcondition(ta.crossunder(long_ma, short_ma), 'Pi Cycle top', message='Pi Cycle top')
+alertcondition(ta.crossover(long_ma, short_ma), 'Long MA above short MA', message='Long MA above short MA')
+
+///////////////////////////////////////////////////////////////////////////////
+// end
+

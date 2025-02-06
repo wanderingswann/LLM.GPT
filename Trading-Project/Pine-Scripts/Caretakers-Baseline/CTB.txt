@@ -1,0 +1,40 @@
+The Caretakers Moving Average Baseline Comparison Indicator.
+
+
+I introduce My Moving Average Baseline Comparison Indicator.
+
+
+This indicator Displays the (Selectable) Source as a 'Zero' Baseline.
+
+The Baseline source can be selected from any of the indicators 7 EMAs or 4 SMA's.
+It can also be chosen from any external indicator or chart plot series.
+(Default = close).
+
+It plots the price differences between 7 EMA's and/or 4 SMA's and the selected Baseline Source.
+(Default [ EMA's 3, 8, 21, 55, 89, 200 … SMA's 10, 30, 50, 200 ])
+
+This allows for deeper analysis of the alignment of the Moving averages in regards to the source.
+
+This also allows for clear analysis of divergences between the moving averages and the source.
+
+The EMA's and SMA's can be turned on and off as groups.
+
+There is an optional Fill color from the highest period EMA and SMA for easy macro trend identification.
+
+The source can be switched to log scale, and a multiplication factor can be applied. (Default = 1000)
+Note : In log mode the scale values are not accurate.
+
+A smoothing factor can be applied to the moving averages to reduce noise. (Default = 1)
+
+The Indicator plots can be inverted on the Y axis.
+
+The indicator can be used in a variety of ways to plan entries/exits and as a trend analysis tool.
+Mar 15, 2020
+Release Notes
+Added SMA 1 - SMA 4 to the source list.
+Mar 16, 2020
+Release Notes
+Changed settings layout and added colour fill options
+Jun 15, 2021
+Release Notes
+Removed some outdated code and transp variables.

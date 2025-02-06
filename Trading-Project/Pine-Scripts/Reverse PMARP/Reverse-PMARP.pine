@@ -1,0 +1,299 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// @version=5
+//
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author = The_Caretaker
+// © The_Caretaker
+//
+// Feel free to reuse or develop this script further.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// Indicator declaration
+
+indicator ( 'Reverse PMAR & PMARP', 'RPMAR & RPMARP', overlay = false, precision = 2, explicit_plot_zorder = true )
+
+///////////////////////////////////////////////////////////////////////////////
+// Parameter string variable declarations
+
+var string s_pmarp  = 'Price Moving Average Ratio Percentile'
+var string s_pmar   = 'Price Moving Average Ratio'
+var string s_HML    = 'High to Mid to Low'
+var string s_HL     = 'High to Low'
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+i_src_price         = input.source  ( close,        'Price Source',                                                                                 inline = '1',     group = 'Main Properties')
+i_p_type_line       = input.string  ( s_pmarp,      'Indicator Type',           options=[ s_pmar, s_pmarp ],                                        inline = '1',     group = 'Main Properties')
+
+i_ma_typ            = input.string  ( 'EMA',        'MA Type',                  options=[ 'SMA', 'EMA', 'WMA', 'RMA', 'HMA' ],                      inline = '1',     group = 'PMAR Properties')
+i_ma_len            = input.int     ( 20,           'Length.',                  minval=1,                                                           inline = '1',     group = 'PMAR Properties')
+i_pmar_multiplier   = input.string  ( 'x1',         'Multiplier',               options=[ 'x1', 'x10', 'x100', 'x1000' ],                           inline = '1',     group = 'PMAR Properties')
+
+i_pmarp_lookback    = input.int     ( 350,          'PMARP Length',             minval=100, maxval=2000,                                            inline = '1',     group = 'PMARP Properties')
+
+i_hi_alert_pmar     = input.float   ( 1.02,         'Upper Alert',              minval=0.1, maxval=100, step=0.001,                                 inline = '1',     group = 'PMAR Levels')
+i_hi_test_pmar      = input.float   ( 1.01,         'Upper Test',               minval=0.1, maxval=100, step=0.001,                                 inline = '2',     group = 'PMAR Levels')
+i_lo_test_pmar      = input.float   ( 0.99,         'Lower Test',               minval=0.1, maxval=100, step=0.001,                                 inline = '3',     group = 'PMAR Levels')
+i_lo_alert_pmar     = input.float   ( 0.98,         'Lower Alert',              minval=0.1, maxval=100, step=0.001,                                 inline = '4',     group = 'PMAR Levels')
+
+i_hi_alert_pmarp    = input.float   ( 99,           'Upper Alert',              minval=0.1, maxval=100, step=0.01,                                  inline = '2',     group = 'PMARP Levels')
+i_hi_test_pmarp     = input.float   ( 85,           'Upper Test',               minval=0.1, maxval=100, step=0.01,                                  inline = '3',     group = 'PMARP Levels')
+i_lo_test_pmarp     = input.float   ( 15,           'Lower Test',               minval=0.1, maxval=100, step=0.01,                                  inline = '4',     group = 'PMARP Levels')
+i_lo_alert_pmarp    = input.float   ( 1,            'Lower Alert',              minval=0.0, maxval=100, step=0.01,                                  inline = '5',     group = 'PMARP Levels')
+
+i_c_typ_line        = input.string  ( 'Spectrum',   'Color Type',               options=[ 'Spectrum', 'Solid' ],                                    inline = '1',     group = 'Line Plot Settings')
+i_c_so_line         = input.color   ( #FFFF00,    'Solid Color',                                                                                  inline = '1',     group = 'Line Plot Settings')
+i_c_typ_sp_line     = input.string  ( s_HML,        'Spectrum',                 options=[ s_HL, s_HML ],                                            inline = '2',     group = 'Line Plot Settings')
+i_c_sp_hi_line      = input.color   ( #ff0000,    'High Color',                                                                                   inline = '2',     group = 'Line Plot Settings')
+i_c_sp_mid_line     = input.color   ( #00ff00,    'Mid Color',                                                                                    inline = '2',     group = 'Line Plot Settings')
+i_c_sp_lo_line      = input.color   ( #0000ff,    'Low Color',                                                                                    inline = '2',     group = 'Line Plot Settings')
+i_p_width_line      = input.int     ( 2,            'Line Width',               minval=1, maxval=4,                                                 inline = '3',     group = 'Line Plot Settings')
+
+i_show_signal_ma    = input.bool    ( true,         'Signal MA',                                                                                    inline = '1',     group = 'Signal MA Settings')
+i_signal_ma_Len     = input.int     ( 20,           'MA Length',                minval=1,                                                           inline = '2',     group = 'Signal MA Settings')
+i_signal_ma_typ     = input.string  ( 'SMA',        'MA Type',                  options=[ 'SMA', 'EMA', 'WMA', 'RMA' ],                             inline = '2',     group = 'Signal MA Settings')
+i_c_typ_sig         = input.string  ( 'Dual',       'Color Type',               options=[ 'Single', 'Dual' ],                                       inline = '3',     group = 'Signal MA Settings')
+i_c_sig             = input.color   ( color.white,'Single Color',                                                                                 inline = '3',     group = 'Signal MA Settings')
+i_c_sig_fall        = input.color   ( #ff0000,    'Dual Color (Falling)',                                                                         inline = '3',     group = 'Signal MA Settings')
+i_p_width_sig       = input.int     ( 2,            'Line Width',               minval=1, maxval=4,                                                 inline = '4',     group = 'Signal MA Settings')
+
+i_hi_alert_line_on  = input.bool    ( true,         'Hi Alert Line.',                                                                               inline = '1',     group = 'Scale Settings')
+i_hi_alert_line_typ = input.string  ( 'Solid',      '',                         options=[ 'Solid', 'Dashed', 'Dotted' ],                            inline = '1',     group = 'Scale Settings')
+i_c_hi_alert        = input.color   ( #FF0000,    '',                                                                                             inline = '1',     group = 'Scale Settings')
+i_hi_test_line_on   = input.bool    ( true,         'Hi Test Line. ',                                                                               inline = '2',     group = 'Scale Settings')
+i_hi_test_line_typ  = input.string  ( 'Dashed',     '',                         options=[ 'Solid', 'Dashed', 'Dotted' ],                            inline = '2',     group = 'Scale Settings')
+i_c_hi_test         = input.color   ( #ffffff,    '',                                                                                             inline = '2',     group = 'Scale Settings')
+i_mid_line_on       = input.bool    ( true,         'Mid Line. ',                                                                                   inline = '3',     group = 'Scale Settings')
+i_mid_line_typ      = input.string  ( 'Solid',      '',                         options=[ 'Solid', 'Dashed', 'Dotted' ],                            inline = '3',     group = 'Scale Settings')
+i_c_mid_line        = input.color   ( #888888,    '',                                                                                             inline = '3',     group = 'Scale Settings')
+i_lo_test_line_on   = input.bool    ( true,         'Lo Test Line. ',                                                                               inline = '4',     group = 'Scale Settings')
+i_lo_test_line_typ  = input.string  ( 'Dashed',     '',                         options=[ 'Solid', 'Dashed', 'Dotted' ],                            inline = '4',     group = 'Scale Settings')
+i_c_lo_test         = input.color   ( #ffffff,    '',                                                                                             inline = '4',     group = 'Scale Settings')
+i_lo_alert_line_on  = input.bool    ( true,         'Lo Alert Line.',                                                                               inline = '5',     group = 'Scale Settings')
+i_lo_alert_line_typ = input.string  ( 'Solid',      '',                         options=[ 'Solid', 'Dashed', 'Dotted' ],                            inline = '5',     group = 'Scale Settings')
+i_c_lo_alert        = input.color   ( #0000FF,    '',                                                                                             inline = '5',     group = 'Scale Settings')
+
+i_c_alert_transp    = input.int     ( 50,           'Signal Bars Transparency', minval=0, maxval=100,                                               inline = '1',     group = 'Signal Bar Settings')
+i_bg_hi_signal_on   = input.bool    ( true,         'Hi Signal Bars',                                                                               inline = '2',     group = 'Signal Bar Settings')
+i_c_hi_bg_alert     = input.color   ( #FF0000,    '',                                                                                             inline = '2',     group = 'Signal Bar Settings')
+i_bg_lo_signal_on   = input.bool    ( true,         'Lo Signal Bars',                                                                               inline = '2',     group = 'Signal Bar Settings')
+i_c_lo_bg_alert     = input.color   ( #0000FF,    '',                                                                                             inline = '2',     group = 'Signal Bar Settings')
+
+i_panelOn           = input.bool    ( true,         'Panel On',                                                                                     inline = '1',     group = 'Info Panel Properties' )
+i_topanelOn         = input.bool    ( true,         'Panel Upper Info',                                                                             inline = '1',     group = 'Info Panel Properties' )
+i_hiAlertOn         = input.bool    ( true,         'Upper Alert Info',                                                                             inline = '2',     group = 'Info Panel Properties' )
+i_hiTestOn          = input.bool    ( true,         'Upper Test Info',                                                                              inline = '3',     group = 'Info Panel Properties' )
+i_midLineOn         = input.bool    ( true,         'MidLine Info',                                                                                 inline = '4',     group = 'Info Panel Properties' )
+i_loTestOn          = input.bool    ( true,         'Lower Test Info',                                                                              inline = '5',     group = 'Info Panel Properties' )
+i_loAlertOn         = input.bool    ( true,         'Lower Alert Info',                                                                             inline = '6',     group = 'Info Panel Properties' )
+i_TextSize          = input.string  ( 'Normal',     'Text Size', options = [ 'Tiny', 'Small','Normal', 'Large'],                                    inline = '7',     group = 'Info Panel Properties' )
+i_dec_pl            = input.int     ( 2,            'Decimal Places',           minval=1, maxval=10,                                                inline = '7',     group = 'Info Panel Properties' )
+i_c_panel_fr        = input.color   ( #f5f5f5,    'Panel Frame',                                                                                  inline = '8',     group = 'Info Panel Properties' )
+i_c_panel_txt       = input.color   ( #f5f5f5,    'Panel Text',                                                                                   inline = '8',     group = 'Info Panel Properties' )
+i_c_panel_bg        = input.color   ( #080808,    'Panel Background',                                                                             inline = '8',     group = 'Info Panel Properties' )
+
+///////////////////////////////////////////////////////////////////////////////
+// Variable declarations
+
+var pmarArray = array.new<float>( i_pmarp_lookback, na )
+
+var float pmarHigh = 1.0
+var float pmarLow  = 1.0
+
+var string text_Size = i_TextSize == 'Tiny' ? size.tiny : i_TextSize == 'Small' ?  size.small : i_TextSize == 'Normal' ? size.normal : size.large
+
+///////////////////////////////////////////////////////////////////////////////
+// Function declarations
+
+f_hline_type ( type_string ) =>
+    type_string == 'Solid' ? hline.style_solid : type_string ==  'Dashed' ? hline.style_dashed : hline.style_dotted
+
+f_trunc ( float _val, int _decPl ) =>                                                           // Returns _val with decimal places truncated to _decPl
+    fact = math.pow ( 10, _decPl )
+    int ( _val * fact ) / fact
+
+f_ma ( float _price, _typ, simple int _len ) =>                                                 // Returns a moving average ( type _typ and period length _len ) of _price
+    ma = switch _typ
+        'SMA' => ta.sma ( _price, _len )  
+        'EMA' => ta.ema ( _price, _len )  
+        'WMA' => ta.wma ( _price, _len )  
+        'RMA' => ta.rma ( _price, _len )    
+        => ta.hma ( _price, _len )         
+
+f_pmar ( float _price, _typ, simple int _len ) =>                                               // Returns the ratio of _price to moving average ( type _typ with period length _len )
+    float ma = f_ma ( _price, _typ, _len )
+    float pmar = _price / ma 
+
+f_pmarp ( simple int _pmarp_len, float _pmar ) =>                                               // Returns the percentile of _pmar over a period of _pmarp_len
+    array.unshift ( pmarArray, _pmar )
+    if array.size ( pmarArray ) > _pmarp_len + 1
+        array.pop ( pmarArray )
+    float percentile = array.percentrank ( pmarArray, 0 )
+
+f_rev_PSMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to simple moving average with period length _len
+    float pSum = math.sum ( _price, _len - 1 ) [1]
+    float price = ( - pSum * _testVal ) / ( _testVal - _len )
+
+f_rev_PEMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to exponential moving average with period length _len
+    float alpha = 2 / ( _len + 1 )
+    float pEMA  = ta.ema ( _price, _len ) [1]
+    float price = (( alpha * _testVal * pEMA ) - ( _testVal * pEMA )) / (( alpha * _testVal ) -1 )
+
+f_rev_PRMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to exponential moving average with period length _len
+    float alpha = 1 / _len
+    float pRMA  = ta.rma ( _price, _len ) [1]
+    float price = (( alpha * _testVal * pRMA ) - ( _testVal * pRMA )) / (( alpha * _testVal ) -1 )
+
+f_open_WMA ( float _price, simple int _len ) =>                                                 // Returns multiple values from the calculation of a weighted moving average with period length _len
+    float norm = 0.0  // normalizing sum of weights
+    float sum = 0.0   // sum of weighted data
+    float lenSq = _len * _len
+    for i = _len - 1 to 1
+        norm := norm + (( _len - i ) * _len )
+        sum  := sum + _price[i] * (( _len - i ) * _len ) 
+    float WMA = ( sum + _price * lenSq ) / ( norm + lenSq )
+    [ WMA, norm, sum, lenSq ]
+
+f_rev_PWMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to weighted moving average with period length _len
+    [ WMA, norm, sum, len2 ] = f_open_WMA ( _price, _len )
+    float price = ( - _testVal * sum ) / ( len2 * _testVal - len2 - norm )
+
+f_open_HMA ( float _price, simple int _len, float _testVal ) =>                                 // Returns multiple values from the calculation of a hull moving average with a period _len
+    int len_2 = math.floor ( _len / 2 )
+    int len_3 = math.floor ( math.sqrt ( _len ))
+    [ WMA1, norm1, sum1, WMA1lenSq ] = f_open_WMA ( _price, _len )
+    [ WMA2, norm2, sum2, WMA2lenSq ] = f_open_WMA ( _price, len_2 )
+    float rawHMA = ( 2 * WMA2 ) - WMA1
+    [ HMA, norm3, sum3, HMAlenSq ] = f_open_WMA ( rawHMA, len_3 )
+    [ norm1, norm2, norm3, sum1, sum2, sum3, WMA1lenSq, WMA2lenSq, HMAlenSq ]
+
+f_rev_PHMAR ( float _price, simple int _len, float _testVal ) =>                                    // Returns a reverse engineered price for _testVal ratio of _price to hull moving average with a period _len
+    [ n1, n2, n3, s1, s2, s3, x2, y2, z2 ] = f_open_HMA ( _price, _len, _testVal )
+    float numerator   = ( s1*y2*z2*_testVal - y2*s3*x2*_testVal - 2*s2*z2*x2*_testVal - n1*y2*s3*_testVal - 2*n1*s2*z2*_testVal + s1*n2*z2*_testVal - n2*s3*x2*_testVal - n1*n2*s3*_testVal )
+    float denominator = ( y2*z2*x2*_testVal + 2*n1*y2*z2*_testVal - y2*z2*x2 - n2*z2*x2*_testVal - n1*y2*z2 - y2*n3*x2 - n2*z2*x2 - n1*y2*n3 - n1*n2*z2 - n2*n3*x2 - n1*n2*n3 )
+    float price = numerator / denominator
+
+f_rev_PMAR ( float _price, simple int _pmarLen, _type, float _testVal ) =>                          // Returns a reverse engineered price for _testVal ratio of _price to moving average ( type _typ and period _len )
+    switch _type
+        "SMA" => f_rev_PSMAR ( _price, _pmarLen, _testVal )
+        "EMA" => f_rev_PEMAR ( _price, _pmarLen, _testVal )
+        "WMA" => f_rev_PWMAR ( _price, _pmarLen, _testVal )
+        "RMA" => f_rev_PRMAR ( _price, _pmarLen, _testVal )
+        => f_rev_PHMAR ( _price, _pmarLen, _testVal )
+
+f_rev_pmarp ( float _price, simple int _pmarLen, simple int _pmarpLen, _type, float _testVal ) =>   // Returns a reverse engineered price for _testVal percentile of ratio of _price to moving average ( type _typ and period _len ) of _price
+    float test_PMAR = array.percentile_nearest_rank ( pmarArray, _testVal )
+    f_rev_PMAR ( _price, _pmarLen, _type, test_PMAR )
+
+f_clrSlct ( _val, _type, _solid, _grad, _lowV, _midV, _topV, color _lowC, color _midC, color _topC ) => // Returns a color determined by _val from user settings of solid, or spectrum from high to low, or double spectrum from high to mid to low
+    _type == 'Solid' ? _solid : _grad == 'High to Low' ? color.from_gradient ( _val, _lowV, _topV, _lowC, _topC) : _val >= _midV ? color.from_gradient ( _val, _midV, _topV, _midC, _topC ) : color.from_gradient ( _val, _lowV, _midV, _lowC, _midC)
+
+f_clrSlct2 ( float _val, string _type, color _single, color _falling ) =>                           // Returns a color determined by series _val from user settings of single, or dual from single or falling                               
+    _type == 'Single' ? _single : _val > _val[1] ? _single : _falling
+
+/////////////////////////////////////////////////////////////////////////////// 
+// Calculations
+
+bool pmarpOn     = i_p_type_line == 'Price Moving Average Ratio Percentile'
+
+float pmar       = f_pmar ( i_src_price, i_ma_typ, i_ma_len )
+float pmarp      = f_pmarp ( i_pmarp_lookback, pmar )
+
+pmarHigh         := pmar >= pmarHigh ? pmar : pmarHigh
+pmarLow          := pmar <= pmarLow  ? pmar : pmarLow
+
+var int multiplier  = switch i_pmar_multiplier
+    'x1'  => 1
+    'x10' => 10
+    'x100' => 100
+    => 1000
+
+float plotline    = pmarpOn ? pmarp : pmar * multiplier
+color c_pmar      = f_clrSlct ( pmar, i_c_typ_line, i_c_so_line, i_c_typ_sp_line, pmarLow, 1, pmarHigh, i_c_sp_lo_line, i_c_sp_mid_line, i_c_sp_hi_line )
+color c_pmarp     = f_clrSlct ( pmarp, i_c_typ_line, i_c_so_line, i_c_typ_sp_line, 0, 50, 100, i_c_sp_lo_line, i_c_sp_mid_line, i_c_sp_hi_line )
+color c_plotLine  = pmarpOn ? c_pmarp : c_pmar
+
+float signal_ma   = f_ma  ( plotline,  i_signal_ma_typ, i_signal_ma_Len )
+color c_plotSig   = f_clrSlct2 ( signal_ma, i_c_typ_sig, i_c_sig, i_c_sig_fall )
+
+float hi_alert    = pmarpOn ? i_hi_alert_pmarp : i_hi_alert_pmar * multiplier
+float hi_test     = pmarpOn ? i_hi_test_pmarp  : i_hi_test_pmar  * multiplier
+float mid_line    = pmarpOn ? 50               : multiplier
+float lo_test     = pmarpOn ? i_lo_test_pmarp  : i_lo_test_pmar  * multiplier
+float lo_alert    = pmarpOn ? i_lo_alert_pmarp : i_lo_alert_pmar * multiplier
+
+float hiAlrtPrice = pmarpOn ? f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_hi_alert_pmarp )  : f_rev_PMAR ( i_src_price, i_ma_len, i_ma_typ, i_hi_alert_pmar )
+float hiRevPrice  = pmarpOn ? f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_hi_test_pmarp )   : f_rev_PMAR ( i_src_price, i_ma_len, i_ma_typ, i_hi_test_pmar )
+float midline     = pmarpOn ? f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, 50 )                : f_rev_PMAR ( i_src_price, i_ma_len, i_ma_typ, 1 )
+float loRevPrice  = pmarpOn ? f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_lo_test_pmarp )   : f_rev_PMAR ( i_src_price, i_ma_len, i_ma_typ, i_lo_test_pmar )
+float loAlrtPrice = pmarpOn ? f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_lo_alert_pmarp )  : f_rev_PMAR ( i_src_price, i_ma_len, i_ma_typ, i_lo_alert_pmar )
+
+bool p_hi_alert   = plotline >= hi_alert
+bool p_lo_alert   = plotline <= lo_alert
+
+///////////////////////////////////////////////////////////////////////////////
+// Panel plot
+
+if i_panelOn
+    int textHeight = 20
+    string titleText = pmarpOn ? "Reverse PMARP" + " ( " + i_ma_typ + " )" : "Reverse PMAR" + " ( " + i_ma_typ + " )"
+    var table panel = table.new ( position.top_right, 3, 7, frame_color = i_c_panel_fr, frame_width = 2, border_color = i_c_panel_fr, border_width = 1 )
+    if i_topanelOn
+        table.cell ( panel, 0, 0, titleText,                                          height = 12,          text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.merge_cells ( panel, 0, 0, 2, 0 )
+        table.cell ( panel, 0, 1, "Input",                                            height = 12,          text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 1, 1, "Level",                                            height = 12,          text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 2, 1, "Price",                                            height = 12,          text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        textHeight := 14
+    
+    if i_hiAlertOn
+        table.cell ( panel, 0, 2, "Upper Alert",                                      height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 1, 2, str.tostring ( hi_alert ),                          height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 2, 2, str.tostring ( f_trunc ( hiAlrtPrice, i_dec_pl )),  height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+    
+    if i_hiTestOn
+        table.cell ( panel, 0, 3, "Upper Test",                                       height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 1, 3, str.tostring ( hi_test ),                           height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 2, 3, str.tostring ( f_trunc ( hiRevPrice, i_dec_pl )),   height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+    
+    if i_midLineOn
+        table.cell ( panel, 0, 4, "Midline",                                          height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 1, 4, str.tostring ( mid_line ),                          height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 2, 4, str.tostring ( f_trunc ( midline, i_dec_pl )),      height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+    
+    if i_loTestOn
+        table.cell ( panel, 0, 5, "Lower Test",                                       height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 1, 5, str.tostring ( lo_test ),                           height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 2, 5, str.tostring ( f_trunc ( loRevPrice, i_dec_pl )),   height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+    
+    if i_loAlertOn
+        table.cell ( panel, 0, 6, "Lower Alert",                                      height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 1, 6, str.tostring ( lo_alert ),                          height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+        table.cell ( panel, 2, 6, str.tostring ( f_trunc ( loAlrtPrice, i_dec_pl )),  height = textHeight,  text_size = text_Size,  bgcolor = i_c_panel_bg, text_color = i_c_panel_txt )
+
+///////////////////////////////////////////////////////////////////////////////
+// Line plot
+
+plot ( plotline,                             'Plot line',             c_plotLine,   i_p_width_line, plot.style_line,        editable = false )
+plot ( i_show_signal_ma ? signal_ma : na,    'Moving Average',        c_plotSig,    i_p_width_sig,  plot.style_line,        editable = false )
+
+plot  ( pmarpOn ? na : pmarHigh * multiplier, 'Historical PMAR High', i_c_hi_alert, 1,              plot.style_line,        editable = false )
+hline ( pmarpOn ? 100 : na,                  'Scale high',            i_c_hi_alert,                 hline.style_solid,      editable = false )
+
+hline ( i_hi_alert_line_on ? hi_alert : na,  'High Alert Level',      i_c_hi_alert, f_hline_type ( i_hi_alert_line_typ ),   editable = false )
+hline ( i_hi_test_line_on ? hi_test : na,    'Test High Level',       i_c_hi_test,  f_hline_type ( i_hi_test_line_typ ),    editable = false )
+hline ( i_mid_line_on ? mid_line : na,       'Midline',               i_c_mid_line, f_hline_type ( i_mid_line_typ ),        editable = false )
+hline ( i_lo_test_line_on ? lo_test : na,    'Test Low Level',        i_c_lo_test,  f_hline_type ( i_lo_test_line_typ ),    editable = false )
+hline ( i_lo_alert_line_on ? lo_alert : na,  'Low Alert Level',       i_c_lo_alert, f_hline_type ( i_lo_alert_line_typ ),   editable = false )
+
+hline ( pmarpOn ? 0   : na,                   'Scale low',            i_c_lo_alert,                 hline.style_solid,      editable = false )
+plot  ( pmarpOn ? na : pmarLow * multiplier,  'Historical PMAR Low',  i_c_lo_alert, 1,              plot.style_line,        editable = false )
+
+bgcolor ( p_hi_alert and i_bg_hi_signal_on ? color.new (#ff0000, i_c_alert_transp ) : na )
+bgcolor ( p_lo_alert and i_bg_lo_signal_on ? color.new (#0000ff, i_c_alert_transp ) : na )
+
+///////////////////////////////////////////////////////////////////////////////
+// End

@@ -1,0 +1,136 @@
+Introducing the Caretakers Reverse True Strength Index.
+
+According to Wikipedia….
+“The True Strength Index (TSI) is a technical indicator used in the analysis of financial markets that attempts to show both trend direction and overbought/oversold conditions. It was first published William Blau in 1991.
+The indicator uses moving averages of the underlying momentum of a financial instrument.
+Momentum is considered a leading indicator of price movements, and a moving average characteristically lags behind price.
+The TSI combines these characteristics to create an indication of price and direction more in sync with market turns than either momentum or moving average.”
+
+The TSI has a normal range of values between +100 and -100.
+
+Traditionally traders and analysts will consider:
+
+Positives values above 25 to indicate an “overbought” condition
+Negative values below -25 to indicate an “oversold” condition
+
+I have reverse engineered the True Strength Index formula to derive 2 new functions.
+
+The reverse TSI function is dual purpose which can be used to calculate….
+
+    The chart price at which the TSI will reach a particular TSI scale value.
+    The chart price at which the TSI will equal its previous value.
+
+
+
+The reverse TSI signal cross function can be used to calculate the chart price at which the TSI will cross its signal line.
+
+I have employed these functions here to return the price levels where the True Strength Index would equal :
+
+    Upper alert level ( default 25 )
+    Zero-Line
+    Lower alert level ( default -25 )
+    Previous TSI (eq) value.
+    TSI signal line
+
+
+
+These crossover levels are displayed via an optional info-box with choice of user selected info.
+
+How to interpret the displayed prices returned from the TSI scale zero line and upper and lower alert levels.
+
+    Closing exactly at the given price will cause the True Strength Index value to equal the scale value.
+    Closing above the given price will cause the True Strength Index to cross above the scale value.
+    Closing below the given price will cause the True Strength Index to cross below the scale value.
+
+
+How to interpret the displayed price returned from the TSI (eq)
+
+    Closing exactly at the price will cause the True Strength Index value to equal the previous TSI value.
+    Closing above the price will cause the True Strength Index value to increase.
+    Closing below the price will cause the True Strength Index value to decrease.
+
+
+How to interpret the displayed price returned from the TSI signal line crossover.
+
+    Closing exactly at the given price will cause the True Strength Index value to equal the signal line.
+    Closing above the given price will cause the True Strength Index to cross above the signal line.
+    Closing below the given price will cause the True Strength Index to cross below the signal line.
+
+
+
+Common methods to derive signals from the TSI :
+
+Zero-line crossovers
+
+    When the CMO crosses above the zero-line, a buy signal is generated.
+    When the CMO crosses below the zero-line, a sell signal is generated.
+
+
+“Overbought” and “Oversold” crossover
+
+    When the SMI crosses below -25 and then moves back above it, a buy signal is generated.
+    When the SMI crosses above +25 and then moves back below it, a sell signal is generated.
+
+
+
+
+What Does the True Strength Index (TSI) Tell You?
+The indicator is primarily used to identify overbought and oversold conditions in an asset's price, spot divergence, identify trend direction and changes via the zero-line, and highlight short-term price momentum with signal line crossovers.
+
+Since the TSI is based on price movements, oversold and overbought levels will vary by the asset being traded. Some stocks may reach +30 and -30 before tending to see price reversals, while another stock may reverse near +20 and -20.
+
+Mark extreme TSI levels, on the asset being traded, to see where overbought and oversold is. Being oversold doesn't necessarily mean it is time to buy, and when an asset is overbought it doesn't necessarily mean it is time to sell. Traders will typically watch for other signals to trigger a trade decision. For example, they may wait for the price or TSI to start dropping before selling in overbought territory. Alternatively, they may wait for a signal line crossover.
+
+
+Signal Line Crossovers
+The true strength index has a signal line, which is usually a seven- to 13-period EMA of the TSI line. A signal line crossover occurs when the TSI line crosses the signal line. When the TSI crosses above the signal line from below, that may warrant a long position. When the TSI crosses below the signal line from above, that may warrant selling or short selling.
+
+Signal line crossovers occur frequently, so should be utilized only in conjunction with other signals from the TSI. For example, buy signals may be favoured when the TSI is above the zero-line. Or sell signals may be favoured when the TSI is in overbought territory.
+
+Zero-line Crossovers
+The zero-line crossover is another signal the TSI generates. Price momentum is positive when the indicator is above zero and negative when it is below zero. Some traders use the zero-line for a directional bias. For example, a trader may decide only to enter a long position if the indicator is above its zero-line. Conversely, the trader would be bearish and only consider short positions if the indicator's value is below zero.
+
+Breakouts and Divergence
+Traders can use support and resistance levels created by the true strength index to identify breakouts and price momentum shifts. For instance, if the indicator breaks below a trendline, the price may see continued selling.
+
+
+Divergence is another tool the TSI provides. If the price of an asset is moving higher, while the TSI is dropping, that is called bearish divergence and could result in a downside price move. If the TSI is rising while the price is falling, that could signal higher prices to come. This is called bullish divergence.
+
+Divergence is a poor timing signal, so it should only be used in conjunction with other signals generated by the TSI or other technical indicators.
+
+The Difference Between the True Strength Index (TSI) and the Moving Average Convergence Divergence (MACD) Indicator.
+
+The TSI is smoothing price changes to create a technical oscillator. The moving average convergence divergence (MACD) indicator is measuring the separation between two moving averages. Both indicators are used in similar ways for trading purposes, yet they are not calculated the same and will provide different signals at different times.
+
+The Limitations of Using the True Strength Index (TSI)
+Many of the signals provided by the TSI will be false signals. That means the price action will be different than expected following a trade signal. For example, during an uptrend, the TSI may cross below the zero-line several times, but then the price proceeds higher even though the TSI indicates momentum has shifted down.
+
+Signal line crossovers also occur so frequently that they may not provide a lot of trading benefit. Such signals need to be heavily filtered based on other elements of the indicator or through other forms of analysis. The TSI will also sometimes change direction without price changing direction, resulting in trade signals that look good on the TSI but continue to lose money based on price.
+
+Divergence also tends to unreliable on the indicator. Divergence can last so long that it provides little insight into when a reversal will actually occur. Also, divergence isn't always present when price reversals actually do occur.
+
+The TSI should only be used in conjunction with other forms of analysis, such as price action analysis and other technical indicators.
+
+This is not financial advice, use at your own risk.
+Mar 22, 2021
+Release Notes
+Renamed some variables, rearranged some code and edited some notes for easier reading.
+Mar 23, 2021
+Release Notes
+Added price filtering of above/below prior close prices which ensures consistent displayed prices while retaining accuracy.
+Mar 24, 2021
+Release Notes
+Moved positive/negative price calculations into the reverse functions for better code efficiency and to remove unnecessary dependencies.
+
+Added negative price value return test within reverse function meaning that it will return a zero value instead of negative values.
+
+Added zero value test function and decimal truncation function and applied these to the text string compilation.
+Returned values greater than zero are displayed as normal, while values less than or equal to zero return the text "Impossible"
+Feb 9, 2023
+Release Notes
+Upgraded to Pinescript Version 5
+
+Added new color setting options.
+Improved settings layout, added settings sections with headers.
+
+Code tidy up.

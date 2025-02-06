@@ -1,0 +1,39 @@
+The liquidity swings indicator highlights swing areas with existent trading activity. The number of times price revisited a swing area is highlighted by a zone delimiting the swing areas. Additionally, the accumulated volume within swing areas is highlighted by labels on the chart. An option to filter out swing areas with volume/counts not reaching a user-set threshold is also included.
+
+This indicator by its very nature is not real-time and is meant for descriptive analysis alongside other components of the script. This is normal behavior for scripts detecting pivots as a part of a system and it is important you are aware the pivot labels are not designed to be traded in real-time themselves.
+
+🔶 USAGE
+
+snapshot
+
+
+The indicator can be used to highlight significant swing areas, these can be accumulation/distribution zones on lower timeframes and might play a role as future support or resistance.
+
+snapshot
+
+
+Swing levels are also highlighted, when a swing level is broken it is displayed as a dashed line. A broken swing high is a bullish indication, while a broken swing low is a bearish indication.
+
+snapshot
+
+
+Filtering swing areas by volume allows to only show significant swing areas with an higher degree of liquidity. These swing areas can be wider, highlighting higher volatility, or might have been visited by the price more frequently.
+
+🔶 SETTINGS
+
+    Pivot Lookback : Lookback period used for the calculation of pivot points.
+    Swing Area : Determine how the swing area is calculated, "Wick Extremity" will use the range from price high to the maximum between price close/open in case of a swing high, and the range from price low to the minimum between price close/open in case of a swing low. "Full Range" will use the full candle range as swing area.
+    Intrabar Precision : Use intrabar data to calculate the accumulated volume within a swing area, this allows obtaining more precise results.
+    Filter Areas By : Determine how swing areas are filtered out, "Count" will filter out swing areas where price visited the area a number of time inferior to the user set threshold. "Volume" will filter out swing areas where the accumulated volume within the area is inferior to the user set threshold.
+
+
+
+🔹 Style
+
+    Swing High : Show swing highs.
+    Swing Low : Show swing lows.
+    Label Size : Size of the labels on the chart.
+
+
+
+Note that swing points are confirmed after Pivot Lookback bars, as such all elements are displayed retrospectively.

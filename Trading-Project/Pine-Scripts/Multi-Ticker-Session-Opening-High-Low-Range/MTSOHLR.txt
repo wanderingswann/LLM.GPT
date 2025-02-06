@@ -1,0 +1,48 @@
+The Multi Ticker Session Opening High Low Range Indicator by the Caretaker.
+
+
+The original idea for this indicator came out of a request from Krown's Crypto Cave community member ZFelds.
+
+
+This indicator is designed to display the High / Low Ranges of the "on chart" asset, at a chosen resolution from the opening time of, and for the duration of, the chosen Ticker Sessions (up to 3) .
+
+
+Its function is to allow the user to easily keep track of the session times of the major world indices, and the reaction of the on chart assets price from the opening of the ticker sessions over the duration of the ticker sessions.
+
+
+Typically used for a guide when scalp trading on low time-frames by plotting the opening 1 or 5 minute High/Low trading range of an asset during the start of a major market opening up an d making trading decisions based on the reaction of Price Action around those levels.
+
+
+It does this by plotting High / Low Range bands (plus mid-lines) which displays the High and Low range of the on chart assets opening candle at the chosen time resolution for the chosen ticker (Defaults : SPX, NI225, UKX).
+
+
+The Range bands fill colour changes depending on whether the chart asset closes candles within, above, or below the range (Default : Silver, Green, Red).
+
+
+It plots optional Background "Session Bars" and "Session Banners" which function to clearly show the session.
+
+
+The background "Session bars" can be set to plot just the first bar as a signal or on all session bars.
+
+
+The "Session Banners" are horizontal lines of chosen width which "float" above the chart data.
+
+
+Optional info text-boxes also "float" above the chart data and function to display the session opening range information.
+(Ticker symbol, Opening range time resolution, Session open high & low).
+
+
+The text-boxes can be set to full label or short label.
+The text-boxes can be set to the left or center of the session.
+
+
+The height offset by which the text-boxes and banners float above the highest high of the range is alterable in the settings.
+
+
+The text-boxes and banners also have a "clash avoidance" function which will offset their heights to help avoid them clashing on screen (This offset is alterable in the settings).
+Feb 16, 2023
+Release Notes
+Upgraded to Pinescript V5
+Added plot & color options.
+Added settings headings.
+Increased maximum possible labels to 500.

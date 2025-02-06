@@ -1,0 +1,9 @@
+# Python Dependencies
+python-dotenv
+requests
+pandas
+schedule
+scipy
+matplotlib
+numpy
+bandit

@@ -1,0 +1,67 @@
+Introducing the Bollinger Band Calculation Tool
+
+What are Bollinger Bands ?
+
+According to Investopedia ....
+"In the 1980s, John Bollinger, a long-time technician of the markets, developed the technique of using a moving average with two trading bands above and below it.
+Unlike a percentage calculation from a normal moving average, Bollinger Bands® simply add and subtract a standard deviation calculation.
+Standard deviation is a mathematical formula that measures volatility, showing how the stock price can vary from its true value.
+By measuring price volatility, Bollinger Bands® adjust themselves to market conditions.
+This is what makes them so handy for traders; they can find almost all of the price data needed between the two bands."
+
+Classic interpretations of Bollinger bands from Fidelity Investments....
+
+"When the bands tighten during a period of low volatility, it raises the likelihood of a sharp price move in either direction.
+This may begin a trending move. Watch out for a false move in opposite direction which reverses before the proper trend begins.
+
+When the bands separate by an unusual large amount, volatility increases and any existing trend may be ending.
+
+Prices have a tendency to bounce within the bands' envelope, touching one band then moving to the other band.
+You can use these swings to help identify potential profit targets.
+For example, if a price bounces off the lower band and then crosses above the moving average, the upper band then becomes the profit target.
+
+Price can exceed or hug a band envelope for prolonged periods during strong trends.
+On divergence with a momentum oscillator, you may want to do additional research to determine if taking additional profits is appropriate for you.
+
+A strong trend continuation can be expected when the price moves out of the bands.
+However, if prices move immediately back inside the band, then the suggested strength is negated."
+
+This indicator contains a standard set of Bollinger Bands with the addition of a Test Closing Price calculation function.
+It displays a standard set of Bollinger Bands by default.
+
+snapshot
+
+
+How do I use the Test Closing Price function ?
+
+Enter a test price in the Test Closing Price box in the settings, and then click the "Use Test Price" button.
+
+The indicator will then replace the current Bollinger upper, lower and basis-lines with plots showing the resultant lines if price were to close at the Test Closing Price.
+
+An information panel will appear which displays the test closing price and the resulting Bollinger-upper, Bollinger-lower and basis-line prices.
+
+Can display up to 10 decimal places and has adjustable label offset.
+
+It will also plot lines outlining the resultant closed candle body for clarity.
+
+To return to "Standard Bollingers" just click off the "Use Test Price" button.
+
+snapshot
+
+
+Knowing exactly what the Bollinger bands and Basis will do if a particular closing price is met can be useful in a variety of ways to traders who use Bollinger Bands® in their trading.
+It is possible to work out exactly what closing price is required to get above or below a Bollinger band which is normally difficult as Bollingers react to the change in price.
+Users can also experiment with different Test Closing Prices[/i to see exactly what effect this would have on the Basis moving average and on the Bollinger bands themselves.
+May 2, 2021
+Release Notes
+https://s3.tradingview.com/snapshots/7/7XzWYWVW.png
+Added "Test Bar" to more clearly show the test results.
+Added "Test Close" horizontal line to more clearly show the test level.
+Added conditional text and background color change to the test results infobox to show....
+
+    "Close above upper band" ( Lime Green )
+    "Close between bands" ( blue )
+    "Close below lower band" ( Red )
+
+
+Added a "negative value filter" which replaces lower Bollinger band values below zero with zero to help with auto focus charts.

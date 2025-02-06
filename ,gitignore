@@ -1,0 +1,49 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+.env
+
+# Virtual environment
+venv/
+.env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.iml
+
+# Logs and local database
+*.log
+*.sqlite3
+*.db
+
+# Testing
+.tox/
+.nox/
+.coverage
+coverage.xml
+pytest_cache/
+nosetests.xml
+
+# Mac OS & Windows files
+.DS_Store
+Thumbs.db
+
+# Docker & Cloud-specific files (if using)
+.dockerignore
+.envrc

@@ -1,0 +1,96 @@
+Introducing the Price Moving Average Ratio & Percentile indicator
+
+A simple indicator which calculates :
+
+    The ratio between a chosen source price and a user defined moving average ( PMAR ) or
+    The percentile of the ratio between the chosen source price and a user defined moving average over an adjustable lookback period ( PMARP )
+
+
+
+It then displays either the PMAR or PMARP as a line plot with optional user defined signal moving average.
+It also plots an optional Visual Alert Level line and background signal bars.
+
+Indicator Settings
+
+Main Properties :
+
+    Source Price .. choice of price values or external value from another indicator ( default [ close ] )
+    Line Plot Type .. choice between PMAR or PMARP ( default PMAR )
+
+
+
+Price Moving Average Ratio Settings :
+
+    PMAR Length ..The time period to be used in calculating the Moving Average for the Price Moving Average Ratio and the PMAR component of the PMARP. ( default [ 140 ] )
+    PMAR Type ..The type of Moving Average which creates the MA for the Price Moving Average Ratio and the PMAR component of the PMARP. ( default [ VWMA ] )
+
+
+
+Price Moving Average Ratio Percentile Settings :
+
+    PMARP Lookback .. The lookback period to be used in calculating the Price Moving Average Ratio Percentile.
+
+
+
+Line Plot Color Settings :
+
+    Gives a choice between a user defined solid color, and a choice of "Blue Green Red", or "Blue Red" spectrum palettes.
+
+
+
+Signal Moving Average Settings :
+
+    Signal MA Length ..The time period to be used in calculating the Signal Moving Average for the Line Plot ( default [ 20 ] )
+    Signal MA Type ..The type of Moving Average which creates the Signal Moving Average for the Line Plot ( default [ SMA ] )
+
+
+
+Signal Moving Average Color Settings :
+
+    Gives a choice between a user defined solid color, and a choice of "Blue Green Red", or "Blue Red" spectrum palettes.
+
+
+
+Visual Alert Level Settings :
+
+    Alert level .. Level which activates the background signal bars ( default [ 0.7 ] )
+
+
+
+Typical Use case for the Price Moving Average Ratio
+
+Traders and Technical Analysts will typically use the PMAR as an accumulation signal generator.
+To do this....
+
+    Set a level below 1 where it has been historically profitable to accumulate the asset in question on the chosen timeframe.
+
+
+
+Typical Use case for the Price Moving Average Ratio Percentile
+
+Traders and Technical Analysts will look at the PMARP to judge how far away current PA is away from the defined MA based on a statistical measure of the lookback period in a percentile format.
+Traders and Technical Analysts will typically use the PMAR as an accumulation signal generator.
+To do this...
+
+    Set a low level where it has been historically profitable to accumulate the asset in question on the chosen timeframe.
+
+
+
+Note : The default settings are specifically set up for use on the daily timeframe with a MA of 140 equating (approximately) to the 20 week moving average.
+
+This is not a stand alone indicator and should be used in combination with volatility and momentum indicators for a more effective trading edge.
+Nov 3, 2021
+Release Notes
+Updated to Pinescript version 5
+Improved calculation method which gives sensible early historical results sooner.
+Added separate high and low visual alert levels for both PMAR and PMARP which are chosen and displayed automatically with indicator selection.
+Added new plot for highest historical PMAR.
+Nov 3, 2022
+Release Notes
+Improved visualization of PMAR function with added centerline and historical low plots
+Nov 3, 2022
+Release Notes
+Code tidy up
+Nov 3, 2022
+Release Notes
+Added signal bar transparency user adjustable setting

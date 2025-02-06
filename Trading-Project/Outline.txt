@@ -1,0 +1,47 @@
+_______________________________________________________________________________________________________________
+
+Coin List
+
+BitCoin
+Etherium
+AAVE
+SOL
+LINK
+XRP
+AVAX
+SUPER
+IMX
+PYR
+BIGTIME
+PENGU
+SUI
+BEAM
+TURBO
+HYPE
+GALA
+GIGA
+CRO
+
+_______________________________________________________________________________________________________________
+
+
+Metrics to track
+
+1Hr Price
+4Hr Price
+Daily Price
+5 day Price
+
+Technical Indicators
+    EMA CROSS
+    RSI
+    STOCH
+
+Coin-Gecko
+Top Gainers 1Hr
+Top Losers 1Hr
+    Check the Top 1k of each and begin looking for coins that are moving up the list
+
+
+
+

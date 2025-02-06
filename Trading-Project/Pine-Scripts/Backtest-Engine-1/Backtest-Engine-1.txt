@@ -1,0 +1,251 @@
+The PineCoders Backtesting and Trading Engine is a sophisticated framework with hybrid code that can run as a study to generate alerts for automated or discretionary trading while simultaneously providing backtest results. It can also easily be converted to a TradingView strategy in order to run TV backtesting. The Engine comes with many built-in strats for entries, filters, stops and exits, but you can also add you own.
+
+If, like any self-respecting strategy modeler should, you spend a reasonable amount of time constantly researching new strategies and tinkering, our hope is that the Engine will become your inseparable go-to tool to test the validity of your creations, as once your tests are conclusive, you will be able to run this code as a study to generate the alerts required to put it in real-world use, whether for discretionary trading or to interface with an execution bot/app. You may also find the backtesting results the Engine produces in study mode enough for your needs and spend most of your time there, only occasionally converting to strategy mode in order to backtest using TV backtesting.
+
+As you will quickly grasp when you bring up this script’s Settings, this is a complex tool. While you will be able to see results very quickly by just putting it on a chart and using its built-in strategies, in order to reap the full benefits of the PineCoders Engine, you will need to invest the time required to understand the subtleties involved in putting all its potential into play.
+
+Disclaimer: use the Engine at your own risk.
+
+Before we delve in more detail, here’s a bird’s eye view of the Engine’s features:
+
+    More than 40 built-in strategies,
+    Customizable components,
+    Coupling with your own external indicator,
+    Simple conversion from Study to Strategy modes,
+    Post-Exit analysis to search for alternate trade outcomes,
+    Use of the Data Window to show detailed bar by bar trade information and global statistics, including some not provided by TV backtesting,
+    Plotting of reminders and generation of alerts on in-trade events.
+
+
+By combining your own strats to the built-in strats supplied with the Engine, and then tuning the numerous options and parameters in the Inputs dialog box, you will be able to play what-if scenarios from an infinite number of permutations.
+
+
+USE CASES
+You have written an indicator that provides an entry strat but it’s missing other components like a filter and a stop strategy. You add a plot in your indicator that respects the Engine’s External Signal Protocol, connect it to the Engine by simply selecting your indicator’s plot name in the Engine’s Settings/Inputs and then run tests on different combinations of entry stops, in-trade stops and profit taking strats to find out which one produces the best results with your entry strat.
+
+You are building a complex strategy that you will want to run as an indicator generating alerts to be sent to a third-party execution bot. You insert your code in the Engine’s modules and leverage its trade management code to quickly move your strategy into production.
+
+You have many different filters and want to explore results using them separately or in combination. Integrate the filter code in the Engine and run through different permutations or hook up your filtering through the external input and control your filter combos from your indicator.
+
+You are tweaking the parameters of your entry, filter or stop strat. You integrate it in the Engine and evaluate its performance using the Engine’s statistics.
+
+You always wondered what results a random entry strat would yield on your markets. You use the Engine’s built-in random entry strat and test it using different combinations of filters, stop and exit strats.
+
+You want to evaluate the impact of fees and slippage on your strategy. You use the Engine’s inputs to play with different values and get immediate feedback in the detailed numbers provided in the Data Window.
+
+You just want to inspect the individual trades your strategy generates. You include it in the Engine and then inspect trades visually on your charts, looking at the numbers in the Data Window as you move your cursor around.
+
+You have never written a production-grade strategy and you want to learn how. Inspect the code in the Engine; you will find essential components typical of what is being used in actual trading systems.
+
+You have run your system for a while and have compiled actual slippage information and your broker/exchange has updated his fees schedule. You enter the information in the Engine and run it on your markets to see the impact this has on your results.
+
+FEATURES
+Before going into the detail of the Inputs and the Data Window numbers, here’s a more detailed overview of the Engine’s features.
+
+Built-in strats
+The engine comes with more than 40 pre-coded strategies for the following standard system components:
+
+    Entries,
+    Filters,
+    Entry stops,
+    2 stage in-trade stops with kick-in rules,
+    Pyramiding rules,
+    Hard exits.
+
+
+While some of the filter and stop strats provided may be useful in production-quality systems, you will not devise crazy profit-generating systems using only the entry strats supplied; that part is still up to you, as will be finding the elusive combination of components that makes winning systems. The Engine will, however, provide you with a solid foundation where all the trade management nitty-gritty is handled for you. By binding your custom strats to the Engine, you will be able to build reliable systems of the best quality currently allowed on the TV platform.
+
+On-chart trade information
+As you move over the bars in a trade, you will see trade numbers in the Data Window change at each bar. The engine calculates the P&L at every bar, including slippage and fees that would be incurred were the trade exited at that bar’s close. If the trade includes pyramided entries, those will be taken into account as well, although for those, final fees and slippage are only calculated at the trade’s exit.
+You can also see on-chart markers for the entry level, stop positions, in-trade special events and entries/exits (you will want to disable these when using the Engine in strategy mode to see TV backtesting results).
+
+Customization
+You can couple your own strats to the Engine in two ways:
+1. By inserting your own code in the Engine’s different modules. The modular design should enable you to do so with minimal effort by following the instructions in the code.
+2. By linking an external indicator to the engine. After making the proper selections in the engine’s Settings and providing values respecting the engine’s protocol, your external indicator can, when the Engine is used in Indicator mode only:
+
+    Tell the engine when to enter long or short trades, but let the engine’s in-trade stop and exit strats manage the exits,
+    Signal both entries and exits,
+    Provide an entry stop along with your entry signal,
+    Filter other entry signals generated by any of the engine’s entry strats.
+
+
+
+Conversion from strategy to study
+TradingView strategies are required to backtest using the TradingView backtesting feature, but if you want to generate alerts with your script, whether for automated trading or just to trigger alerts that you will use in discretionary trading, your code has to run as a study since, for the time being, strategies can’t generate alerts. From hereon we will use indicator as a synonym for study.
+Unless you want to maintain two code bases, you will need hybrid code that easily flips between strategy and indicator modes, and your code will need to restrict its use of strategy() calls and their arguments if it’s going to be able to run both as an indicator and a strategy using the same trade logic. That’s one of the benefits of using this Engine. Once you will have entered your own strats in the Engine, it will be a matter of commenting/uncommenting only four lines of code to flip between indicator and strategy modes in a matter of seconds.
+Additionally, even when running in Indicator mode, the Engine will still provide you with precious numbers on your individual trades and global results, some of which are not available with normal TradingView backtesting.
+
+Post-Exit Analysis for alternate outcomes (PEA)
+While typical backtesting shows results of trade outcomes, PEA focuses on what could have happened after the exit. The intention is to help traders get an idea of the opportunity/risk in the bars following the trade in order to evaluate if their exit strategies are too aggressive or conservative.
+After a trade is exited, the Engine’s PEA module continues analyzing outcomes for a user-defined quantity of bars. It identifies the maximum opportunity and risk available in that space, and calculates the drawdown required to reach the highest opportunity level post-exit, while recording the number of bars to that point.
+Typically, if you can’t find opportunity greater than 1X past your trade using a few different reasonable lengths of PEA, your strategy is doing pretty good at capturing opportunity. Remember that 100% of opportunity is never capturable. If, however, PEA was finding post-trade maximum opportunity of 3 or 4X with average drawdowns of 0.3 to those areas, this could be a clue revealing your system is exiting trades prematurely. To analyze PEA numbers, you can uncomment complete sets of plots in the Plot module to reveal detailed global and individual PEA numbers.
+
+Statistics
+The Engine provides stats on your trades that TV backtesting does not provide, such as:
+
+    Average Profitability Per Trade (APPT), aka statistical expectancy, a crucial value.
+    APPT per bar,
+    Average stop size,
+    Traded volume .
+
+
+It also shows you on a trade-by-trade basis, on-going individual trade results and data.
+
+In-trade events
+In-trade events can plot reminders and trigger alerts when they occur. The built-in events are:
+
+    Price approaching stop,
+    Possible tops/bottoms,
+    Large stop movement (for discretionary trading where stop is moved manually),
+    Large price movements.
+
+
+
+Slippage and Fees
+Even when running in indicator mode, the Engine allows for slippage and fees to be included in the logic and test results.
+
+Alerts
+The alert creation mechanism allows you to configure alerts on any combination of the normal or pyramided entries, exits and in-trade events.
+
+Backtesting results
+A few words on the numbers calculated in the Engine. Priority is given to numbers not shown in TV backtesting, as you can readily convert the script to a strategy if you need them.
+We have chosen to focus on numbers expressing results relative to X (the trade’s risk) rather than in absolute currency numbers or in other more conventional but less useful ways. For example, most of the individual trade results are not shown in percentages, as this unit of measure is often less meaningful than those expressed in units of risk (X). A trade that closes with a +25% result, for example, is a poor outcome if it was entered with a -50% stop. Expressed in X, this trade’s P&L becomes 0.5, which provides much better insight into the trade’s outcome. A trade that closes with a P&L of +2X has earned twice the risk incurred upon entry, which would represent a pre-trade risk:reward ratio of 2.
+The way to go about it when you think in X’s and that you adopt the sound risk management policy to risk a fixed percentage of your account on each trade is to equate a currency value to a unit of X. E.g. your account is 10K USD and you decide you will risk a maximum of 1% of it on each trade. That means your unit of X for each trade is worth 100 USD. If your APPT is 2X, this means every time you risk 100 USD in a trade, you can expect to make, on average, 200 USD.
+By presenting results this way, we hope that the Engine’s statistics will appeal to those cognisant of sound risk management strategies, while gently leading traders who aren’t, towards them.
+We trade to turn in tangible profits of course, so at some point currency must come into play. Accordingly, some values such as equity, P&L, slippage and fees are expressed in currency.
+Many of the usual numbers shown in TV backtests are nonetheless available, but they have been commented out in the Engine’s Plot module.
+
+Position sizing and risk management
+All good system designers understand that optimal risk management is at the very heart of all winning strategies. The risk in a trade is defined by the fraction of current equity represented by the amplitude of the stop, so in order to manage risk optimally on each trade, position size should adjust to the stop’s amplitude. Systems that enter trades with a fixed stop amplitude can get away with calculating position size as a fixed percentage of current equity. In the context of a test run where equity varies, what represents a fixed amount of risk translates into different currency values.
+Dynamically adjusting position size throughout a system’s life is optimal in many ways. First, as position sizing will vary with current equity, it reproduces a behavioral pattern common to experienced traders, who will dial down risk when confronted to poor performance and increase it when performance improves. Second, limiting risk confers more predictability to statistical test results. Third, position sizing isn’t just about managing risk, it’s also about maximizing opportunity. By using the maximum leverage (no reference to trading on margin here) into the trade that your risk management strategy allows, a dynamic position size allows you to capture maximal opportunity.
+To calculate position sizes using the fixed risk method, we use the following formula: Position = Account * MaxRisk% / Stop%[, which calculates a position size taking into account the trade’s entry stop so that if the trade is stopped out, 100 USD will be lost. For someone who manages risk this way, common instructions to invest a certain percentage of your account in a position are simply worthless, as they do not take into account the risk incurred in the trade.
+
+The Engine lets you select either the fixed risk or fixed percentage of equity position sizing methods. The closest thing to dynamic position sizing that can currently be done with alerts is to use a bot that allows syntax to specify position size as a percentage of equity which, while being dynamic in the sense that it will adapt to current equity when the trade is entered, does not allow us to modulate position size using the stop’s amplitude. Changes to alerts are on the way which should solve this problem.
+In order for you to simulate performance with the constraint of fixed position sizing, the Engine also offers a third, less preferable option, where position size is defined as a fixed percentage of initial capital so that it is constant throughout the test and will thus represent a varying proportion of current equity.
+Let’s recap. The three position sizing methods the Engine offers are:
+1. By specifying the maximum percentage of risk to incur on your remaining equity, so the Engine will dynamically adjust position size for each trade so that, combining the stop’s amplitude with position size will yield a fixed percentage of risk incurred on current equity,
+2. By specifying a fixed percentage of remaining equity. Note that unless your system has a fixed stop at entry, this method will not provide maximal risk control, as risk will vary with the amplitude of the stop for every trade. This method, as the first, does however have the advantage of automatically adjusting position size to equity. It is the Engine’s default method because it has an equivalent in TV backtesting, so when flipping between indicator and strategy mode, test results will more or less correspond.
+3. By specifying a fixed percentage of the Initial Capital. While this is the least preferable method, it nonetheless reflects the reality confronted by most system designers on TradingView today. In this case, risk varies both because the fixed position size in initial capital currency represents a varying percentage of remaining equity, and because the trade’s stop amplitude may vary, adding another variability vector to risk.
+Note that the Engine cannot display equity results for strategies entering trades for a fixed amount of shares/contracts at a variable price.
+
+
+SETTINGS/INPUTS
+Because the initial text first published with a script cannot be edited later and because there are just too many options, the Engine’s Inputs will not be covered in minute detail, as they will most certainly evolve. We will go over them with broad strokes; you should be able to figure the rest out. If you have questions, just ask them here or in the PineCoders Telegram group.
+
+Display
+The display header’s checkbox does nothing.
+For the moment, only one exit strategy uses a take profit level, so only that one will show information when checking “Show Take Profit Level”.
+Entries
+You can activate two simultaneous entry strats, each selected from the same set of strats contained in the Engine. If you select two and they fire simultaneously, the main strat’s signal will be used.
+The random strat in each list uses a different seed, so you will get different results from each.
+The “Filter transitions” and “Filter states” strats delegate signal generation to the selected filter(s). “Filter transitions” signals will only fire when the filter transitions into bull/bear state, so after a trade is stopped out, the next entry may take some time to trigger if the filter’s state does not change quickly. When you choose “Filter states”, then a new trade will be entered immediately after an exit in the direction the filter allows.
+If you select “External Indicator”, your indicator will need to generate a +2/-2 (or a positive/negative stop value) to enter a long/short position, providing the selected filters allow for it. If you wish to use the Engine’s capacity to also derive the entry stop level from your indicator’s signal, then you must explicitly choose this option in the Entry Stops section.
+Filters
+You can activate as many filters as you wish; they are additive. The “Maximum stop allowed on entry” is an important component of proper risk management. If your system has an average 3% stop size and you need to trade using fixed position sizes because of alert/execution bot limitations, you must use this filter because if your system was to enter a trade with a 15% stop, that trade would incur 5 times the normal risk, and its result would account for an abnormally high proportion in your system’s performance.
+Remember that any filter can also be used as an entry signal, either when it changes states, or whenever no trade is active and the filter is in a bull or bear mode.
+Entry Stops
+An entry stop must be selected in the Engine, as it requires a stop level before the in-trade stop is calculated. Until the selected in-trade stop strat generates a stop that comes closer to price than the entry stop (or respects another one of the in-trade stops kick in strats), the entry stop level is used.
+It is here that you must select “External Indicator” if your indicator supplies a +price/-price value to be used as the entry stop. A +price is expected for a long entry and a -price value will enter a short with a stop at price. Note that the price is the absolute price, not an offset to the current price level.
+In-Trade Stops
+The Engine comes with many built-in in-trade stop strats. Note that some of them share the “Length” and “Multiple” field, so when you swap between them, be sure that the length and multiple in use correspond to what you want for that stop strat. Suggested defaults appear with the name of each strat in the dropdown.
+In addition to the strat you wish to use, you must also determine when it kicks in to replace the initial entry’s stop, which is determined using different strats. For strats where you can define a positive or negative multiple of X, percentage or fixed value for a kick-in strat, a positive value is above the trade’s entry fill and a negative one below. A value of zero represents breakeven.
+Pyramiding
+What you specify in this section are the rules that allow pyramiding to happen. By themselves, these rules will not generate pyramiding entries. For those to happen, entry signals must be issued by one of the active entry strats, and conform to the pyramiding rules which act as a filter for them. The “Filter must allow entry” selection must be chosen if you want the usual system’s filters to act as additional filtering criteria for your pyramided entries.
+Hard Exits
+You can choose from a variety of hard exit strats. Hard exits are exit strategies which signal trade exits on specific events, as opposed to price breaching a stop level in In-Trade Stops strategies. They are self-explanatory. The last one labelled When Take Profit Level (multiple of X) is reached is the only one that uses a level, but contrary to stops, it is above price and while it is relative because it is expressed as a multiple of X, it does not move during the trade. This is the level called Take Profit that is show when the “Show Take Profit Level” checkbox is checked in the Display section.
+While stops focus on managing risk, hard exit strategies try to put the emphasis on capturing opportunity.
+Slippage
+You can define it as a percentage or a fixed value, with different settings for entries and exits. The entry and exit markers on the chart show the impact of slippage on the entry price (the fill).
+Fees
+Fees, whether expressed as a percentage of position size in and out of the trade or as a fixed value per in and out, are in the same units of currency as the capital defined in the Position Sizing section. Fees being deducted from your Capital, they do not have an impact on the chart marker positions.
+In-Trade Events
+These events will only trigger during trades. They can be helpful to act as reminders for traders using the Engine as assistance to discretionary trading.
+Post-Exit Analysis
+It is normally on. Some of its results will show in the Global Numbers section of the Data Window. Only a few of the statistics generated are shown; many more are available, but commented out in the Plot module.
+Date Range Filtering
+Note that you don’t have to change the dates to enable/diable filtering. When you are done with a specific date range, just uncheck “Date Range Filtering” to disable date filtering.
+Alert Triggers
+Each selection corresponds to one condition. Conditions can be combined into a single alert as you please. Just be sure you have selected the ones you want to trigger the alert before you create the alert. For example, if you trade in both directions and you want a single alert to trigger on both types of exits, you must select both “Long Exit” and “Short Exit” before creating your alert.
+Once the alert is triggered, these settings no longer have relevance as they have been saved with the alert.
+When viewing charts where an alert has just triggered, if your alert triggers on more than one condition, you will need the appropriate markers active on your chart to figure out which condition triggered the alert, since plotting of markers is independent of alert management.
+Position sizing
+You have 3 options to determine position size:
+1. Proportional to Stop -> Variable, with a cap on size.
+2. Percentage of equity -> Variable.
+3. Percentage of Initial Capital -> Fixed.
+External Indicator
+This is where you connect your indicator’s plot that will generate the signals the Engine will act upon. Remember this only works in Indicator mode.
+
+
+DATA WINDOW INFORMATION
+The top part of the window contains global numbers while the individual trade information appears in the bottom part. The different types of units used to express values are:
+
+    curr: denotes the currency used in the Position Sizing section of Inputs for the Initial Capital value.
+    quote: denotes quote currency, i.e. the value the instrument is expressed in, or the right side of the market pair (USD in EURUSD ).
+    X: the stop’s amplitude, itself expressed in quote currency, which we use to express a trade’s P&L, so that a trade with P&L=2X has made twice the stop’s amplitude in profit. This is sometimes referred to as R, since it represents one unit of risk. It is also the unit of measure used in the APPT, which denotes expected reward per unit of risk.
+    X%: is also the stop’s amplitude, but expressed as a percentage of the Entry Fill.
+
+
+        The numbers appearing in the Data Window are all prefixed:
+            “ALL:” the number is the average for all first entries and pyramided entries.
+            ”1ST:” the number is for first entries only.
+            ”PYR:” the number is for pyramided entries only.
+            ”PEA:” the number is for Post-Exit Analyses
+        Global Numbers
+        Numbers in this section represent the results of all trades up to the cursor on the chart.
+        Average Profitability Per Trade (X): This value is the most important gauge of your strat’s worthiness. It represents the returns that can be expected from your strat for each unit of risk incurred. E.g.: your APPT is 2.0, thus for every unit of currency you invest in a trade, you can on average expect to obtain 2 after the trade. APPT is also referred to as “statistical expectancy”. If it is negative, your strategy is losing, even if your win rate is very good (it means your winning trades aren’t winning enough, or your losing trades lose too much, or both). Its counterpart in currency is also shown, as is the APPT/bar, which can be a useful gauge in deciding between rivalling systems.
+        Profit Factor: Gross of winning trades/Gross of losing trades. Strategy is profitable when >1. Not as useful as the APPT because it doesn’t take into account the win rate and the average win/loss per trade. It is calculated from the total winning/losing results of this particular backtest and has less predictive value than the APPT. A good profit factor together with a poor APPT means you just found a chart where your system outperformed. Relying too much on the profit factor is a bit like a poker player who would think going all in with two’s against aces is optimal because he just won a hand that way.
+        Win Rate: Percentage of winning trades out of all trades. Taken alone, it doesn’t have much to do with strategy profitability. You can have a win rate of 99% but if that one trade in 100 ruins you because of poor risk management, 99% doesn’t look so good anymore. This number speaks more of the system’s profile than its worthiness. Still, it can be useful to gauge if the system fits your personality. It can also be useful to traders intending to sell their systems, as low win rate systems are more difficult to sell and require more handholding of worried customers.
+        Equity (curr): This the sum of initial capital and the P&L of your system’s trades, including fees and slippage.
+        Return on Capital is the equivalent of TV’s Net Profit figure, i.e. the variation on your initial capital.
+        Maximum drawdown is the maximal drawdown from the highest equity point until the drop . There is also a close to close (meaning it doesn’t take into account in-trade variations) maximum drawdown value commented out in the code.
+        The next values are self-explanatory, until:
+        PYR: Avg Profitability Per Entry (X): this is the APPT for all pyramided entries.
+        PEA: Avg Max Opp . Available (X): the average maximal opportunity found in the Post-Exit Analyses.
+        PEA: Avg Drawdown to Max Opp . (X): this represents the maximum drawdown (incurred from the close at the beginning of the PEA analysis) required to reach the maximal opportunity point.
+
+        Trade Information
+        Numbers in this section concern only the current trade under the cursor. Most of them are self-explanatory. Use the description’s prefix to determine what the values applies to.
+        PYR: Avg Profitability Per Entry (X): While this value includes the impact of all current pyramided entries (and only those) and updates when you move your cursor around, P&L only reflects fees at the trade’s last bar.
+        PEA: Max Opp . Available (X): It’s the most profitable close reached post-trade, measured from the trade’s Exit Fill, expressed in the X value of the trade the PEA follows.
+        PEA: Drawdown to Max Opp . (X): This is the maximum drawdown from the trade’s Exit Fill that needs to be sustained in order to reach the maximum opportunity point, also expressed in X. Note that PEA numbers do not include slippage and fees.
+
+        EXTERNAL SIGNAL PROTOCOL
+        Only one external indicator can be connected to a script; in order to leverage its use to the fullest, the engine provides options to use it as either an entry signal, an entry/exit signal or a filter. When used as an entry signal, you can also use the signal to provide the entry’s stop. Here’s how this works:
+        For filter state: supply +1 for bull (long entries allowed), -1 for bear (short entries allowed).
+        For entry signals: supply +2 for long, -2 for short.
+        For exit signals: supply +3 for exit from long, -3 for exit from short.
+        To send an entry stop level with an entry signal: Send positive stop level for long entry (e.g. 103.33 to enter a long with a stop at 103.33), negative stop level for short entry (e.g. -103.33 to enter a short with a stop at 103.33). If you use this feature, your indicator will have to check for exact stop levels of 1.0, 2.0 or 3.0 and their negative counterparts, and fudge them with a tick in order to avoid confusion with other signals in the protocol.
+        Remember that mere generation of the values by your indicator will have no effect until you explicitly allow their use in the appropriate sections of the Engine’s Settings/Inputs.
+        An example of a script issuing a signal for the Engine is published by PineCoders.
+
+        RECOMMENDATIONS TO ASPIRING SYSTEM DESIGNERS Stick to higher timeframes. On progressively lower timeframes, margins decrease and fees and slippage take a proportionally larger portion of profits, to the point where they can very easily turn a profitable strategy into a losing one. Additionally, your margin for error shrinks as the equilibrium of your system’s profitability becomes more fragile with the tight numbers involved in the shorter time frames. Avoid <1H time frames.
+
+        Know and calculate fees and slippage. To avoid market shock, backtest using conservative fees and slippage parameters. Systems rarely show unexpectedly good returns when they are confronted to the markets, so put all chances on your side by being outrageously conservative—or a the very least, realistic. Test results that do not include fees and slippage are worthless. Slippage is there for a reason, and that’s because our interventions in the market change the market. It is easier to find alpha in illiquid markets such as cryptos because not many large players participate in them. If your backtesting results are based on moving large positions and you don’t also add the inevitable slippage that will occur when you enter/exit thin markets, your backtesting will produce unrealistic results. Even if you do include large slippage in your settings, the Engine can only do so much as it will not let slippage push fills past the high or low of the entry bar, but the gap may be much larger in illiquid markets.
+
+        Never test and optimize your system on the same dataset, as that is the perfect recipe for overfitting or data dredging, which is trying to find one precise set of rules/parameters that works only on one dataset. These setups are the most fragile and often get destroyed when they meet the real world.
+
+        Try to find datasets yielding more than 100 trades. Less than that and results are not as reliable.
+
+        Consider all backtesting results with suspicion. If you never entertained sceptic tendencies, now is the time to begin. If your backtest results look really good, assume they are flawed, either because of your methodology, the data you’re using or the software doing the testing. Always assume the worse and learn proper backtesting techniques such as monte carlo simulations and walk forward analysis to avoid the traps and biases that unchecked greed will set for you. If you are not familiar with concepts such as survivor bias, lookahead bias and confirmation bias, learn about them.
+
+        Stick to simple bars or candles when designing systems. Other types of bars often do not yield reliable results, whether by design (Heikin Ashi) or because of the way they are implemented on TV (Renko bars).
+
+        Know that you don’t know and use that knowledge to learn more about systems and how to properly test them, about your biases, and about yourself.
+
+        Manage risk first, then capture opportunity.
+
+        Respect the inherent uncertainty of the future. Cleanse yourself of the sad arrogance and unchecked greed common to newcomers to trading. Strive for rationality. Respect the fact that while backtest results may look promising, there is no guarantee they will repeat in the future (there is actually a high probability they won’t!), because the future is fundamentally unknowable. If you develop a system that looks promising, don’t oversell it to others whose greed may lead them to entertain unreasonable expectations.
+
+        Have a plan. Understand what king of trading system you are trying to build. Have a clear picture or where entries, exits and other important levels will be in the sort of trade you are trying to create with your system. This stated direction will help you discard more efficiently many of the inevitably useless ideas that will pop up during system design.
+
+        Be wary of complexity. Experienced systems engineers understand how rapidly complexity builds when you assemble components together—however simple each one may be. The more complex your system, the more difficult it will be to manage.
+
+        Play!. Allow yourself time to play around when you design your systems. While much comes about from working with a purpose, great ideas sometimes come out of just trying things with no set goal, when you are stuck and don’t know how to move ahead. Have fun!
+        LucFNOTES
+        While the engine’s code can supply multiple consecutive entries of longs or shorts in order to scale positions (pyramid), all exits currently assume the execution bot will exit the totality of the position. No partial exits are currently possible with the Engine.
+        Because the Engine is literally crippled by the limitations on the number of plots a script can output on TV; it can only show a fraction of all the information it calculates in the Data Window. You will find in the Plot Module vast amounts of commented out lines that you can activate if you also disable an equivalent number of other plots. This may be useful to explore certain characteristics of your system in more detail.
+        When backtesting using the TV backtesting feature, you will need to provide the strategy parameters you wish to use through either Settings/Properties or by changing the default values in the code’s header. These values are defined in variables and used not only in the strategy() statement, but also as defaults in the Engine’s relevant Inputs.
+        If you want to test using pyramiding, then both the strategy’s Setting/Properties and the Engine’s Settings/Inputs need to allow pyramiding.
+        If you find any bugs in the Engine, please let us know. 

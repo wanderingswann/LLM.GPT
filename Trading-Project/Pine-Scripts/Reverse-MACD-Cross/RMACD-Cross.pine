@@ -1,0 +1,165 @@
+//@version=5
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author  = The_Caretaker
+// © The_Caretaker
+//
+// Much respect to the original creator of this idea Mr Johhny Dough
+// And the related works of Giorgos Siligardos and Dimitris Tsokakis
+//
+// The prior work of the above mentioned inspired me to bring the idea to its logical conclusion on the MACD 
+// by creating the reverse MACD signal line cross function
+// 
+// Feel free to reuse or develop this script further, please drop me a note below if you find it useful.
+//
+
+indicator ( 'CT Reverse MACD Cross', 'CT_RMACD', true, format.price, precision=2 )
+
+//////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+source_price    = input.source  ( close,          'Price Source',                                                               inline = '1', group = 'MACD Properties' )
+fast_length     = input.int     ( 12,             'MACD Fast Period', minval=1, maxval=500,                                     inline = '2', group = 'MACD Properties' )
+slow_length     = input.int     ( 26,             'MACD Slow Period', minval=1, maxval=500,                                     inline = '3', group = 'MACD Properties' )
+
+i_MACDeqOn      = input.bool    ( true,           'Show MACD eq',                                                               inline = '0', group = 'MACD eq Line Plot Settings' )
+i_c_typ_line    = input.string  ( 'Dual',         'Color Type',                 options=[ 'Single', 'Dual' ],                   inline = '1', group = 'MACD eq Line Plot Settings' )
+i_c_line        = input.color   ( #ff9100,      'Single Color',                                                               inline = '2', group = 'MACD eq Line Plot Settings' )
+i_c_line_rise   = input.color   ( #26A69A,      'Dual Color (Rising)',                                                        inline = '3', group = 'MACD eq Line Plot Settings' )
+i_c_line_fall   = input.color   ( #EF5350,      'Dual Color (Falling)',                                                       inline = '3', group = 'MACD eq Line Plot Settings' )
+i_p_width_line  = input.int     ( 2,              'Line Width',                 minval=1, maxval=4,                             inline = '4', group = 'MACD eq Line Plot Settings' )
+
+i_emaOn         = input.bool    ( true,           'Show EMA Signal Line Crossover',                                             inline = '1', group = 'EMA Properties & Crossover Plot Settings' )
+i_emaLen        = input.int     ( 9,              'MA Length',                  minval=1,                                       inline = '2', group = 'EMA Properties & Crossover Plot Settings' )
+i_c_typ_ema     = input.string  ( 'Dual',         'Color Type',                 options=[ 'Single', 'Dual' ],                   inline = '3', group = 'EMA Properties & Crossover Plot Settings' )
+i_c_ema         = input.color   ( #ffffff,      'Single Color',                                                               inline = '3', group = 'EMA Properties & Crossover Plot Settings' )
+i_c_ema_rise    = input.color   ( #005eff,      'Dual Color (Rising)',                                                        inline = '4', group = 'EMA Properties & Crossover Plot Settings' )
+i_c_ema_fall    = input.color   ( #ff9d00,      'Dual Color (Falling)',                                                       inline = '4', group = 'EMA Properties & Crossover Plot Settings' )
+i_p_width_ema   = input.int     ( 2,              'Line Width',                 minval=1, maxval=4,                             inline = '5', group = 'EMA Properties & Crossover Plot Settings' )
+
+i_smaOn         = input.bool    ( false,          'Show SMA Signal Line Crossover',                                             inline = '1', group = 'SMA Properties & Crossover Plot Settings' )
+i_smaLen        = input.int     ( 9,              'MA Length',                  minval=1,                                       inline = '2', group = 'SMA Properties & Crossover Plot Settings' )
+i_c_typ_sma     = input.string  ( 'Dual',         'Color Type',                 options=[ 'Single', 'Dual' ],                   inline = '3', group = 'SMA Properties & Crossover Plot Settings' )
+i_c_sma         = input.color   ( #ffffff,      'Single Color',                                                               inline = '3', group = 'SMA Properties & Crossover Plot Settings' )
+i_c_sma_rise    = input.color   ( #00ff00,      'Dual Color (Rising)',                                                        inline = '4', group = 'SMA Properties & Crossover Plot Settings' )
+i_c_sma_fall    = input.color   ( #ff0000,      'Dual Color (Falling)',                                                       inline = '4', group = 'SMA Properties & Crossover Plot Settings' )
+i_p_width_sma   = input.int     ( 2,              'Line Width',                 minval=1, maxval=4,                             inline = '5', group = 'SMA Properties & Crossover Plot Settings' )
+
+i_midLineOn     = input.bool    ( true,           '',                                                                           inline = '3', group = 'Scale Settings' )
+i_midLine       = input.int     ( 0,              'Mid-line',                   minval=0, maxval=0,                             inline = '3', group = 'Scale Settings' )
+i_c_midline     = input.color   ( #909090,      '',                                                                           inline = '3', group = 'Scale Settings' )
+i_p_width_mli   = input.int     ( 1,              'Width',                      minval=1, maxval=4,                             inline = '3', group = 'Scale Settings' )
+
+dec_places      = input.int     ( 2,              'Decimal Places',             minval=0, maxval=10,                            inline = '1', group = 'Infobox Properties' )
+label_offset    = input.int     ( 6,              'Offset',                     minval=0, maxval=100,                           inline = '2', group = 'Infobox Properties' )
+label_bg_color  = input.color   (#FFFFFF,       'Text Color',                                                                 inline = '3', group = 'Infobox Properties' )
+label_txt_below = input.color   (#EF5350,       'BG MACD Falling',                                                            inline = '4', group = 'Infobox Properties' )
+label_txt_above = input.color   (#26A69A,       'BG MACD Rising',                                                             inline = '5', group = 'Infobox Properties' )
+
+//////////////////////////////////////////////////////////////////////////////
+// Function Declarations
+
+alpha ( len ) =>
+    2 / (len + 1)
+
+     // returns exponential weighted multiplier for period len
+
+macd_eq ( price, fast_len, slow_len ) =>
+    _X = (alpha(fast_len) * ta.ema(price, fast_len)[1] - alpha(slow_len) * ta.ema(price, slow_len)[1]) / (alpha(fast_len) - alpha(slow_len))
+    _return = _X > 0 ? _X : 0
+    _return
+
+     // returns price where MACD is equal to previous bar MACD
+     // the user can infer from this that 
+     // closing above this price will cause an increase of the MACD compared to the prior MACD
+     // and closing below it will cause a decrease of the MACD compared to the prior MACD
+
+macd_level ( level, price, fast_len, slow_len ) =>
+    _X = (level + (1 - alpha(slow_len)) * ta.ema(price, slow_len)[1] - (1 - alpha(fast_len)) * ta.ema(price, fast_len)[1]) / (alpha(fast_len) - alpha(slow_len))
+    _return = _X > 0 ? _X : 0
+    _return
+
+     // returns price where MACD is equal to level value
+     // e.g. macd_level ( 0, close, 12, 26 ) 
+     // would return the next closing price which would make MACD = 0
+
+macd_cross_ema ( P, V, X, Y, Z ) =>
+    _X = (ta.ema(P, X)[1] * alpha(X) * alpha(Z) - ta.ema(P, Y)[1] * alpha(Y) * alpha(Z) - ta.ema(P, X)[1] * alpha(X) + ta.ema(P, Y)[1] * alpha(Y) + ta.ema(P, Y)[1] * alpha(Z) + ta.ema(V, Z)[1] * alpha(Z) - ta.ema(P, X)[1] * alpha(Z) - ta.ema(P, Y)[1] - ta.ema(V, Z)[1] + ta.ema(P, X)[1]) / (alpha(X) * alpha(Z) - alpha(Y) * alpha(Z) - alpha(X) + alpha(Y))
+    _return = _X > 0 ? _X : 0
+    _return
+
+     // returns price where MACD is equal to the signal line
+     // the user can infer from this that 
+     // closing above this price will cause the MACD to cross above the EMA signal line
+     // and closing below it will cause the MACD to cross below the EMA signal line
+
+macd_cross_sma ( P, V, X, Y, Z ) =>
+    _X = (ta.ema(P, X)[1] * alpha(X) * Z - ta.ema(P, Y)[1] * alpha(Y) * Z + math.sum(V[1], Z - 1) - ta.ema(P, X)[1] * alpha(X) + ta.ema(P, Y)[1] * alpha(Y) - ta.ema(P, X)[1] * Z + ta.ema(P, Y)[1] * Z + ta.ema(P, X)[1] - ta.ema(P, Y)[1]) / ((-1 + Z) * (alpha(X) - alpha(Y)))
+    _return = _X > 0 ? _X : 0
+    _return
+
+     // returns price where MACD is equal to SMA signal line
+     // the user can infer from this that 
+     // closing above this price will cause the MACD to cross above the SMA signal line
+     // and closing below it will cause the MACD to cross below the SMA signal line
+
+text_eq ( p, x, d ) =>
+    text_1 = p > x ? 'MACD\n\n Continues Rising Above : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d)) : 'MACD\n\n Continues Falling Below (Eq) :' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d))
+    text_1
+
+text_cross ( p, x, y, d, a, b ) =>
+    ema_text = p > x ? 'Cross Below EMA Signal Line : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d)) : 'Cross Above EMA Signal Line : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d))
+    sma_text = p > y ? 'Cross Below SMA Signal Line : ' + str.tostring(int(y * math.pow(10, d)) / math.pow(10, d)) : 'Cross Above SMA Signal Line : ' + str.tostring(int(y * math.pow(10, d)) / math.pow(10, d))
+    text_2 = a and b ? ema_text + '\n\n' + sma_text : a ? ema_text : b ? sma_text : ''
+    text_2
+
+text_zero ( p, x, d ) =>
+    text_3 = p > x ? 'Cross Below Zero Line : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d)) : 'Cross Above Zero Line : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d))
+    text_3
+
+//////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+fast_ema        = ta.ema ( source_price, fast_length )
+slow_ema        = ta.ema ( source_price, slow_length )
+
+macd            = fast_ema - slow_ema
+
+ema_sig_line    = ta.ema ( macd, i_emaLen )
+sma_sig_line    = ta.sma ( macd, i_smaLen )
+
+ema_hist        = macd - ema_sig_line
+sma_hist        = macd - sma_sig_line
+
+reverse_macd    = macd_eq ( source_price, fast_length, slow_length )
+
+c_MACD_eq       = i_c_typ_line == 'Single' ? i_c_line : reverse_macd < source_price ? i_c_line_rise : i_c_line_fall
+
+macd_ema_cross  = macd_cross_ema ( source_price, macd, fast_length, slow_length, i_emaLen )
+macd_sma_cross  = macd_cross_sma ( source_price, macd, fast_length, slow_length, i_smaLen )
+
+c_macd_ema_cross = i_c_typ_ema == 'Single' ? i_c_ema : macd_ema_cross > source_price ? i_c_ema_rise : i_c_ema_fall
+c_macd_sma_cross = i_c_typ_sma == 'Single' ? i_c_sma : macd_sma_cross > source_price ? i_c_sma_rise : i_c_sma_fall
+
+
+macd_zero_line  = macd_level ( i_midLine, source_price, fast_length, slow_length )
+
+label_text      = text_eq ( source_price, reverse_macd, dec_places ) + '\n\n' + text_cross ( source_price, macd_ema_cross, macd_sma_cross, dec_places, i_emaOn, i_smaOn ) + '\n\n' + text_zero ( source_price, macd_zero_line, dec_places )
+
+//////////////////////////////////////////////////////////////////////////////
+// Plots and Fills
+
+label_X_Loc = time_close + (time_close - time_close[1]) * label_offset  // Set Label offset
+
+plot ( i_MACDeqOn ? reverse_macd : na, 'MACD Eq Line', c_MACD_eq, i_p_width_line, style=plot.style_line )
+plot ( i_midLineOn ? macd_zero_line : na,  'MACD Zero Line Cross', i_c_midline, i_p_width_mli, style=plot.style_line )
+
+plot ( i_emaOn ? macd_ema_cross : na, 'MACD EMA Signal Line Cross', c_macd_ema_cross, i_p_width_ema, style=plot.style_line )
+plot ( i_smaOn ? macd_sma_cross : na, 'MACD SMA Signal Line Cross', c_macd_sma_cross, i_p_width_sma, style=plot.style_line )
+
+label = label.new ( label_X_Loc, hlc3, label_text, xloc.bar_time, yloc.price, macd < macd[1] ? label_txt_below : label_txt_above, label.style_label_left, label_bg_color, size=size.normal )
+
+label.delete (label[1])  // Delete Previous Label
+
+//////////////////////////////////////////////////////////////////////////////
+// End
+

@@ -1,0 +1,311 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author = The_Caretaker
+// © The_Caretaker
+// @version = 4
+//
+// On Chart indicator which shows ...
+// User defined sets of 5 Exponential and 3 Simple moving averages.
+// The price levels required to cross the moving averages on the next bar close.
+//
+// I developed 3 new functions in order to create this indicator.
+// This was done by reverse engineering their formulas to output the price which would make a pair of moving averages equal on the next close.
+// This means that closing on the other side of the level indicated will cause the pair of moving averages to cross over at the same time.
+//
+// SMA to SMA Cross Function
+// sma_X_eq_sma_Y ( P, X, Y )
+// Returns the level required to cross Sma X with Sma Y on the next bar close.
+//
+// EMA to EMA Cross Function
+// ema_X_eq_ema_Y ( P, X, Y )
+// Returns the level required to cross Ema X with Ema Y on the next bar close.
+//
+// EMA to SMA Cross Function
+// ema_X_eq_sma_Y ( P, X, Y )
+// Returns the price level which cross Ema X with Sma Y on the next bar close.
+//
+//
+// Feel free to use these functions, or to develop this script further, please drop me a note below if you find it useful.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+study ( "Krown Moving Averages & Crossover Levels","Kmax", overlay = true, max_labels_count = 200)
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+price       = input ( close,"Price Source",         input.source )
+
+ema_on      = input ( true, "EMA Lines",            input.bool )
+sma_on      = input ( true, "SMA Lines",            input.bool )
+
+cross_line  = input ( true, "Cross Lines",          input.bool )
+cross_labl  = input ( true, "Cross Labels",         input.bool )
+
+cut         = input ( false, "Cut Plots at Limit",  input.bool )
+Limit       = input ( 2,    "Limit Factor")
+label_X_pos = input ( 3,    "Label Offset",         input.integer, minval = 0, maxval = 100 )
+DP          = input ( 0,    "Decimal Places",       input.integer, minval = 0, maxval = 100 )
+
+ema1_len    = input ( 21,   "EMA 1 Period", input.integer, minval = 1)
+ema2_len    = input ( 55,   "EMA 2 Period", input.integer, minval = 1)
+ema3_len    = input ( 89,   "EMA 3 Period", input.integer, minval = 1)
+ema4_len    = input ( 200,  "EMA 4 Period", input.integer, minval = 1)
+ema5_len    = input ( 377,  "EMA 5 Period", input.integer, minval = 1)
+
+sma1_len    = input ( 10,   "SMA 1 Period", input.integer, minval = 1)
+sma2_len    = input ( 30,   "SMA 2 Period", input.integer, minval = 1)
+sma3_len    = input ( 200,  "SMA 3 Period", input.integer, minval = 1)
+
+///////////////////////////////////////////////////////////////////////////////
+// Set Global Variables
+
+color_21e   = color.yellow
+color_55e   = color.lime
+color_89e   = color.aqua
+color_200e  = color.fuchsia
+color_377e  = color.teal
+
+color_10s   = color.red
+color_30s   = color.blue
+color_200s  = color.white
+
+black = #000000
+
+///////////////////////////////////////////////////////////////////////////////
+// Function Declarations
+
+prior_sum ( p, x ) =>
+    sum ( p[1], x - 1 )
+
+alpha ( len ) => 
+    2 / ( len + 1 )
+
+sma_X_eq_sma_Y ( P, X, Y ) => 
+    ( prior_sum ( P, X ) * Y - prior_sum ( P, Y ) * X ) / ( X - Y )
+
+ema_X_eq_ema_Y ( P, X, Y ) => 
+    ( ema ( P[1], X ) - alpha ( X ) * ema ( P[1], X ) - ( ema ( P[1], Y ) - alpha ( Y ) * ema ( P[1], X ) ) ) / ( alpha ( Y ) - alpha ( X ) )
+
+ema_X_eq_sma_Y ( P, X, Y ) =>  
+    ( ( ema ( P[1], X ) * Y ) - ( ema ( P[1], X ) * alpha ( X ) * Y ) - prior_sum ( P, Y ) ) / ( 1 - alpha(X) * Y ) 
+
+text ( type, Bool, decimals, X, Y, Z ) => 
+    if Bool and type == 1
+        text = tostring(X)+" Ema  x  "+tostring(Y)+" Ema "+tostring(int(Z*pow(10,decimals))/pow(10,decimals))
+    else
+        if Bool and type == 2
+            text = tostring(X)+" Ema  x  "+tostring(Y)+" Sma "+tostring(int(Z*pow(10,decimals))/pow(10,decimals))
+        else
+            if Bool and type == 3
+                text = tostring(X)+" Sma  x  "+tostring(Y)+" Sma "+tostring(int(Z*pow(10,decimals))/pow(10,decimals))
+
+cutoff ( run, level, mult ) =>
+    basis = close
+    locutlvl = basis - ( basis / mult )
+    hicutlvl = basis + basis 
+    return = run and level < locutlvl ? na : run and level > hicutlvl ? na : level
+    return
+
+in_range ( run, level, mult ) =>
+    basis = close
+    locutlvl = basis - ( basis / mult )
+    hicutlvl = basis + basis 
+    return = run and level < locutlvl ? false : run and level > hicutlvl ? false : level
+    return
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+label_X_Loc  = time_close + (( time_close - time_close[1] ) * label_X_pos )
+
+// Moving Averages
+
+ema_1 = ema ( price, ema1_len )
+ema_2 = ema ( price, ema2_len )
+ema_3 = ema ( price, ema3_len )
+ema_4 = ema ( price, ema4_len )
+ema_5 = ema ( price, ema5_len )
+
+sma_1 = sma ( price, sma1_len )
+sma_2 = sma ( price, sma2_len )
+sma_3 = sma ( price, sma3_len )
+
+// Crossover Levels
+
+ema_1_ema_2 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema1_len, ema2_len ), Limit )
+ema_1_ema_3 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema1_len, ema3_len ), Limit )
+ema_1_ema_4 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema1_len, ema4_len ), Limit )
+ema_1_ema_5 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema1_len, ema5_len ), Limit )
+ema_2_ema_3 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema2_len, ema3_len ), Limit )
+ema_2_ema_4 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema2_len, ema4_len ), Limit )
+ema_2_ema_5 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema2_len, ema5_len ), Limit )
+ema_3_ema_4 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema3_len, ema4_len ), Limit )
+ema_3_ema_5 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema3_len, ema5_len ), Limit )
+ema_4_ema_5 = cutoff ( cut, ema_X_eq_ema_Y ( price, ema4_len, ema5_len ), Limit )
+
+ema_1_sma_1 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema1_len, sma1_len ), Limit )
+ema_1_sma_2 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema1_len, sma2_len ), Limit )
+ema_1_sma_3 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema1_len, sma3_len ), Limit )
+ema_2_sma_1 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema2_len, sma1_len ), Limit )
+ema_2_sma_2 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema2_len, sma2_len ), Limit )
+ema_2_sma_3 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema2_len, sma3_len ), Limit )
+ema_3_sma_1 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema3_len, sma1_len ), Limit )
+ema_3_sma_2 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema3_len, sma2_len ), Limit )
+ema_3_sma_3 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema3_len, sma3_len ), Limit )
+ema_4_sma_1 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema4_len, sma1_len ), Limit )
+ema_4_sma_2 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema4_len, sma2_len ), Limit )
+ema_4_sma_3 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema4_len, sma3_len ), Limit )
+ema_5_sma_1 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema5_len, sma1_len ), Limit )
+ema_5_sma_2 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema5_len, sma2_len ), Limit )
+ema_5_sma_3 = cutoff ( cut, ema_X_eq_sma_Y ( price, ema5_len, sma3_len ), Limit )
+
+sma_1_sma_2 = cutoff ( cut, sma_X_eq_sma_Y ( price, sma1_len, sma2_len ), Limit )
+sma_1_sma_3 = cutoff ( cut, sma_X_eq_sma_Y ( price, sma1_len, sma3_len ), Limit )
+sma_2_sma_3 = cutoff ( cut, sma_X_eq_sma_Y ( price, sma2_len, sma3_len ), Limit )
+
+///////////////////////////////////////////////////////////////////////////////
+// Line Plots
+
+plot ( ema_on ? ema_1 : na,  "  21 Ema", color_21e, 2 )
+plot ( ema_on ? ema_2 : na,  "  55 Ema", color_55e, 2 )
+plot ( ema_on ? ema_3 : na,  "  89 Ema", color_89e, 2 )
+plot ( ema_on ? ema_4 : na,  " 200 Ema", color_200e, 2 )
+plot ( ema_on ? ema_5 : na,  " 377 Ema", color_377e, 2 )
+
+plot ( sma_on ? sma_1 : na,  "  10 Sma", color_10s, 2 )
+plot ( sma_on ? sma_2 : na,  "  30 Sma", color_30s, 2 )
+plot ( sma_on ? sma_3 : na,  " 200 Sma", color_200s, 2 )
+
+plot ( cross_line ? ema_1_ema_2 : na, "  21 Ema  x  55 Ema", color_21e,   1, plot.style_linebr )
+plot ( cross_line ? ema_1_ema_3 : na, "  21 Ema  x  89 Ema", color_21e,   1, plot.style_linebr )
+plot ( cross_line ? ema_1_ema_4 : na, "  21 Ema  x 200 Ema", color_21e,   1, plot.style_linebr )
+plot ( cross_line ? ema_1_ema_5 : na, "  21 Ema  x 377 Ema", color_21e,   1, plot.style_linebr )
+plot ( cross_line ? ema_2_ema_3 : na, "  55 Ema  x  89 Ema", color_55e,   1, plot.style_linebr )
+plot ( cross_line ? ema_2_ema_4 : na, "  55 Ema  x 200 Ema", color_55e,   1, plot.style_linebr )
+plot ( cross_line ? ema_2_ema_5 : na, "  55 Ema  x 377 Ema", color_55e,   1, plot.style_linebr )
+plot ( cross_line ? ema_3_ema_4 : na, "  89 Ema  x 200 Ema", color_89e,   1, plot.style_linebr )
+plot ( cross_line ? ema_3_ema_5 : na, "  89 Ema  x 377 Ema", color_89e,   1, plot.style_linebr )
+plot ( cross_line ? ema_4_ema_5 : na, " 200 Ema  x 377 Ema", color_200e,  1, plot.style_linebr )
+
+plot ( cross_line ? ema_1_ema_2 : na, "  21 Ema  x  55 Ema", color_55e,   2, plot.style_circles )
+plot ( cross_line ? ema_1_ema_3 : na, "  21 Ema  x  89 Ema", color_89e,   2, plot.style_circles )
+plot ( cross_line ? ema_1_ema_4 : na, "  21 Ema  x 200 Ema", color_200e,  2, plot.style_circles )
+plot ( cross_line ? ema_1_ema_5 : na, "  21 Ema  x 377 Ema", color_377e,  2, plot.style_circles )
+plot ( cross_line ? ema_2_ema_3 : na, "  55 Ema  x  89 Ema", color_89e,   2, plot.style_circles )
+plot ( cross_line ? ema_2_ema_4 : na, "  55 Ema  x 200 Ema", color_200e,  2, plot.style_circles )
+plot ( cross_line ? ema_2_ema_5 : na, "  55 Ema  x 377 Ema", color_377e,  2, plot.style_circles )
+plot ( cross_line ? ema_3_ema_4 : na, "  89 Ema  x 200 Ema", color_200e,  2, plot.style_circles )
+plot ( cross_line ? ema_3_ema_5 : na, "  89 Ema  x 377 Ema", color_377e,  2, plot.style_circles )
+plot ( cross_line ? ema_4_ema_5 : na, " 200 Ema  x 377 Ema", color_377e,  2, plot.style_circles )
+
+plot ( cross_line ? ema_1_sma_1 : na, "  21 Ema  x  10 Sma", color_21e,   1, plot.style_linebr )
+plot ( cross_line ? ema_1_sma_2 : na, "  21 Ema  x  30 Sma", color_21e,   1, plot.style_linebr )
+plot ( cross_line ? ema_1_sma_3 : na, "  21 Ema  x 200 Sma", color_21e,   1, plot.style_linebr )
+plot ( cross_line ? ema_2_sma_1 : na, "  55 Ema  x  10 Sma", color_55e,   1, plot.style_linebr )
+plot ( cross_line ? ema_2_sma_2 : na, "  55 Ema  x  30 Sma", color_55e,   1, plot.style_linebr )
+plot ( cross_line ? ema_2_sma_3 : na, "  55 Ema  x 200 Sma", color_55e,   1, plot.style_linebr )
+plot ( cross_line ? ema_3_sma_1 : na, "  89 Ema  x  10 Sma", color_89e,   1, plot.style_linebr )
+plot ( cross_line ? ema_3_sma_2 : na, "  89 Ema  x  30 Sma", color_89e,   1, plot.style_linebr )
+plot ( cross_line ? ema_3_sma_3 : na, "  89 Ema  x 200 Sma", color_89e,   1, plot.style_linebr )
+plot ( cross_line ? ema_4_sma_1 : na, " 200 Ema  x  10 Sma", color_200e,  1, plot.style_linebr )
+plot ( cross_line ? ema_4_sma_2 : na, " 200 Ema  x  30 Sma", color_200e,  1, plot.style_linebr )
+plot ( cross_line ? ema_4_sma_3 : na, " 200 Ema  x 200 Sma", color_200e,  1, plot.style_linebr )
+plot ( cross_line ? ema_5_sma_1 : na, " 377 Ema  x  10 Sma", color_377e,  1, plot.style_linebr )
+plot ( cross_line ? ema_5_sma_2 : na, " 377 Ema  x  30 Sma", color_377e,  1, plot.style_linebr )
+plot ( cross_line ? ema_5_sma_3 : na, " 377 Ema  x 200 Sma", color_377e,  1, plot.style_linebr )
+
+plot ( cross_line ? ema_1_sma_1 : na, "  21 Ema  x  10 Sma", color_10s,   2, plot.style_circles )
+plot ( cross_line ? ema_1_sma_2 : na, "  21 Ema  x  30 Sma", color_30s,   2, plot.style_circles )
+plot ( cross_line ? ema_1_sma_3 : na, "  21 Ema  x 200 Sma", color_200s,  2, plot.style_circles )
+plot ( cross_line ? ema_2_sma_1 : na, "  55 Ema  x  10 Sma", color_10s,   2, plot.style_circles )
+plot ( cross_line ? ema_2_sma_2 : na, "  55 Ema  x  30 Sma", color_30s,   2, plot.style_circles )
+plot ( cross_line ? ema_2_sma_3 : na, "  55 Ema  x 200 Sma", color_200s,  2, plot.style_circles )
+plot ( cross_line ? ema_3_sma_1 : na, "  89 Ema  x  10 Sma", color_10s,   2, plot.style_circles )
+plot ( cross_line ? ema_3_sma_2 : na, "  89 Ema  x  30 Sma", color_30s,   2, plot.style_circles )
+plot ( cross_line ? ema_3_sma_3 : na, "  89 Ema  x 200 Sma", color_200s,  2, plot.style_circles )
+plot ( cross_line ? ema_4_sma_1 : na, " 200 Ema  x  10 Sma", color_10s,   2, plot.style_circles )
+plot ( cross_line ? ema_4_sma_2 : na, " 200 Ema  x  30 Sma", color_30s,   2, plot.style_circles )
+plot ( cross_line ? ema_4_sma_3 : na, " 200 Ema  x 200 Sma", color_200s,  2, plot.style_circles )
+plot ( cross_line ? ema_5_sma_1 : na, " 377 Ema  x  10 Sma", color_10s,   2, plot.style_circles )
+plot ( cross_line ? ema_5_sma_2 : na, " 377 Ema  x  30 Sma", color_30s,   2, plot.style_circles )
+plot ( cross_line ? ema_5_sma_3 : na, " 377 Ema  x 200 Sma", color_200s,  2, plot.style_circles )
+
+plot ( cross_line ? sma_1_sma_2 : na, " 10 Sma  x  30 Sma", color_10s,    1, plot.style_linebr )
+plot ( cross_line ? sma_1_sma_3 : na, " 10 Sma  x 200 Sma", color_10s,    1, plot.style_linebr )
+plot ( cross_line ? sma_2_sma_3 : na, " 30 Sma  x 200 Sma", color_30s,    1, plot.style_linebr )
+
+plot ( cross_line ? sma_1_sma_2 : na, " 10 Sma  x  30 Sma", color_30s,    2, plot.style_circles )
+plot ( cross_line ? sma_1_sma_3 : na, " 10 Sma  x 200 Sma", color_200s,   2, plot.style_circles )
+plot ( cross_line ? sma_2_sma_3 : na, " 30 Sma  x 200 Sma", color_200s,   2, plot.style_circles )
+
+///////////////////////////////////////////////////////////////////////////////
+// Label Plots
+
+ema1_ema2_label = in_range ( cut, ema_1_ema_2, Limit ) ? label.new ( label_X_Loc, ema_1_ema_2, text ( 1, cross_labl, DP, ema1_len, ema2_len, ema_1_ema_2 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.lime,    size=size.normal ) : na
+ema1_ema3_label = in_range ( cut, ema_1_ema_3, Limit ) ? label.new ( label_X_Loc, ema_1_ema_3, text ( 1, cross_labl, DP, ema1_len, ema3_len, ema_1_ema_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.aqua,    size=size.normal ) : na
+ema1_ema4_label = in_range ( cut, ema_1_ema_4, Limit ) ? label.new ( label_X_Loc, ema_1_ema_4, text ( 1, cross_labl, DP, ema1_len, ema4_len, ema_1_ema_4 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.white,   size=size.normal ) : na
+ema1_ema5_label = in_range ( cut, ema_1_ema_5, Limit ) ? label.new ( label_X_Loc, ema_1_ema_5, text ( 1, cross_labl, DP, ema1_len, ema5_len, ema_1_ema_5 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.purple,  size=size.normal ) : na
+ema2_ema3_label = in_range ( cut, ema_2_ema_3, Limit ) ? label.new ( label_X_Loc, ema_2_ema_3, text ( 1, cross_labl, DP, ema2_len, ema3_len, ema_2_ema_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.aqua,    size=size.normal ) : na
+ema2_ema4_label = in_range ( cut, ema_2_ema_4, Limit ) ? label.new ( label_X_Loc, ema_2_ema_4, text ( 1, cross_labl, DP, ema2_len, ema4_len, ema_2_ema_4 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.white,   size=size.normal ) : na
+ema2_ema5_label = in_range ( cut, ema_2_ema_5, Limit ) ? label.new ( label_X_Loc, ema_2_ema_5, text ( 1, cross_labl, DP, ema2_len, ema5_len, ema_2_ema_5 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.purple,  size=size.normal ) : na
+ema3_ema4_label = in_range ( cut, ema_3_ema_4, Limit ) ? label.new ( label_X_Loc, ema_3_ema_4, text ( 1, cross_labl, DP, ema3_len, ema4_len, ema_3_ema_4 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.white,   size=size.normal ) : na
+ema3_ema5_label = in_range ( cut, ema_3_ema_5, Limit ) ? label.new ( label_X_Loc, ema_3_ema_5, text ( 1, cross_labl, DP, ema3_len, ema5_len, ema_3_ema_5 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.purple,  size=size.normal ) : na
+ema4_ema5_label = in_range ( cut, ema_4_ema_5, Limit ) ? label.new ( label_X_Loc, ema_4_ema_5, text ( 1, cross_labl, DP, ema1_len, ema5_len, ema_4_ema_5 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.purple,  size=size.normal ) : na
+
+ema1_sma1_label = in_range ( cut, ema_1_sma_1, Limit ) ? label.new ( label_X_Loc, ema_1_sma_1, text ( 2, cross_labl, DP, ema1_len, sma1_len, ema_1_sma_1 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.red,     size=size.normal ) : na
+ema1_sma2_label = in_range ( cut, ema_1_sma_2, Limit ) ? label.new ( label_X_Loc, ema_1_sma_2, text ( 2, cross_labl, DP, ema1_len, sma2_len, ema_1_sma_2 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.blue,    size=size.normal ) : na
+ema1_sma3_label = in_range ( cut, ema_1_sma_3, Limit ) ? label.new ( label_X_Loc, ema_1_sma_3, text ( 2, cross_labl, DP, ema1_len, sma3_len, ema_1_sma_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.fuchsia, size=size.normal ) : na
+ema2_sma1_label = in_range ( cut, ema_2_sma_1, Limit ) ? label.new ( label_X_Loc, ema_2_sma_1, text ( 2, cross_labl, DP, ema2_len, sma1_len, ema_2_sma_1 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.red,     size=size.normal ) : na
+ema2_sma2_label = in_range ( cut, ema_2_sma_2, Limit ) ? label.new ( label_X_Loc, ema_2_sma_2, text ( 2, cross_labl, DP, ema2_len, sma2_len, ema_2_sma_2 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.blue,    size=size.normal ) : na
+ema2_sma3_label = in_range ( cut, ema_2_sma_3, Limit ) ? label.new ( label_X_Loc, ema_2_sma_3, text ( 2, cross_labl, DP, ema2_len, sma3_len, ema_2_sma_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.fuchsia, size=size.normal ) : na
+ema3_sma1_label = in_range ( cut, ema_3_sma_1, Limit ) ? label.new ( label_X_Loc, ema_3_sma_1, text ( 2, cross_labl, DP, ema3_len, sma1_len, ema_3_sma_1 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.red,     size=size.normal ) : na
+ema3_sma2_label = in_range ( cut, ema_3_sma_2, Limit ) ? label.new ( label_X_Loc, ema_3_sma_2, text ( 2, cross_labl, DP, ema3_len, sma2_len, ema_3_sma_2 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.blue,    size=size.normal ) : na
+ema3_sma3_label = in_range ( cut, ema_3_sma_3, Limit ) ? label.new ( label_X_Loc, ema_3_sma_3, text ( 2, cross_labl, DP, ema3_len, sma3_len, ema_3_sma_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.fuchsia, size=size.normal ) : na
+ema4_sma1_label = in_range ( cut, ema_4_sma_1, Limit ) ? label.new ( label_X_Loc, ema_4_sma_1, text ( 2, cross_labl, DP, ema4_len, sma1_len, ema_4_sma_1 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.red,     size=size.normal ) : na
+ema4_sma2_label = in_range ( cut, ema_4_sma_2, Limit ) ? label.new ( label_X_Loc, ema_4_sma_2, text ( 2, cross_labl, DP, ema4_len, sma2_len, ema_4_sma_2 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.blue,    size=size.normal ) : na
+ema4_sma3_label = in_range ( cut, ema_4_sma_3, Limit ) ? label.new ( label_X_Loc, ema_4_sma_3, text ( 2, cross_labl, DP, ema4_len, sma3_len, ema_4_sma_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.fuchsia, size=size.normal ) : na
+ema5_sma1_label = in_range ( cut, ema_5_sma_1, Limit ) ? label.new ( label_X_Loc, ema_5_sma_1, text ( 2, cross_labl, DP, ema5_len, sma1_len, ema_5_sma_1 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.red,     size=size.normal ) : na
+ema5_sma2_label = in_range ( cut, ema_5_sma_2, Limit ) ? label.new ( label_X_Loc, ema_5_sma_2, text ( 2, cross_labl, DP, ema5_len, sma2_len, ema_5_sma_2 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.blue,    size=size.normal ) : na
+ema5_sma3_label = in_range ( cut, ema_5_sma_3, Limit ) ? label.new ( label_X_Loc, ema_5_sma_3, text ( 2, cross_labl, DP, ema5_len, sma3_len, ema_5_sma_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.fuchsia, size=size.normal ) : na
+
+sma1_sma2_label = in_range ( cut, sma_1_sma_2, Limit ) ? label.new ( label_X_Loc, sma_1_sma_2, text ( 3, cross_labl, DP, sma1_len, sma2_len, sma_1_sma_2 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.blue,    size=size.normal ) : na
+sma1_sma3_label = in_range ( cut, sma_1_sma_3, Limit ) ? label.new ( label_X_Loc, sma_1_sma_3, text ( 3, cross_labl, DP, sma1_len, sma3_len, sma_1_sma_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.white,   size=size.normal ) : na
+sma2_sma3_label = in_range ( cut, sma_2_sma_3, Limit ) ? label.new ( label_X_Loc, sma_2_sma_3, text ( 3, cross_labl, DP, sma2_len, sma3_len, sma_2_sma_3 ), xloc.bar_time, yloc.price, black, label.style_label_left , color.fuchsia, size=size.normal ) : na
+
+// Delete Previous Labels
+
+label.delete ( sma1_sma2_label[1] )
+label.delete ( sma1_sma3_label[1] )
+label.delete ( sma2_sma3_label[1] )
+
+label.delete ( ema1_ema2_label[1] )
+label.delete ( ema1_ema3_label[1] )
+label.delete ( ema1_ema4_label[1] )
+label.delete ( ema1_ema5_label[1] )
+label.delete ( ema2_ema3_label[1] )
+label.delete ( ema2_ema4_label[1] )
+label.delete ( ema2_ema5_label[1] )
+label.delete ( ema3_ema4_label[1] )
+label.delete ( ema3_ema5_label[1] )
+label.delete ( ema4_ema5_label[1] )
+
+label.delete ( ema1_sma1_label[1] )
+label.delete ( ema1_sma2_label[1] )
+label.delete ( ema1_sma3_label[1] )
+label.delete ( ema2_sma1_label[1] )
+label.delete ( ema2_sma2_label[1] )
+label.delete ( ema2_sma3_label[1] )
+label.delete ( ema3_sma1_label[1] )
+label.delete ( ema3_sma2_label[1] )
+label.delete ( ema3_sma3_label[1] )
+label.delete ( ema4_sma1_label[1] )
+label.delete ( ema4_sma2_label[1] )
+label.delete ( ema4_sma3_label[1] )
+label.delete ( ema5_sma1_label[1] )
+label.delete ( ema5_sma2_label[1] )
+label.delete ( ema5_sma3_label[1] )
+
+///////////////////////////////////////////////////////////////////////////////
+// End

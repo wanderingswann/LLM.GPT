@@ -1,0 +1,174 @@
+//@version=5
+//
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author  = The_Caretaker
+// © The_Caretaker
+//
+// By request I have created a combined Reverse Chande Momentum level and eq function to compliment the reverse SMI
+// 
+// Feel free to reuse or develop this script further, please drop me a note below if you find it useful.
+
+indicator ( 'Reverse Chande Momentum Oscillator', 'RCMO', overlay=false, format=format.price, precision=2 )
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+i_src           = input.source  ( close,            'Source',                                                   inline = '0',   group = 'Chande Momentum Properties' )
+i_length        = input.int     ( 13,               'Length',                   minval=1,                       inline = '1',   group = 'Chande Momentum Properties' )
+
+i_c_typ_line    = input.string  ( 'Single',         'Color Type',               options=[ 'Single', 'Dual' ],   inline = '1',   group = 'Chande Momentum Line Settings')
+i_c_line        = input.color   ( #ffffff,        'Single',                                                   inline = '1',   group = 'Chande Momentum Line Settings')
+i_c_line_rise   = input.color   ( #00ff00,        'Dual Rising',                                              inline = '2',   group = 'Chande Momentum Line Settings')
+i_c_line_fall   = input.color   ( #ff0000,        'Dual Falling',                                             inline = '2',   group = 'Chande Momentum Line Settings')
+i_p_w_line      = input.int     ( 2,                'Line Width',               minval=1, maxval=4,             inline = '2',   group = 'Chande Momentum Line Settings')
+
+i_sigLength     = input.int     ( 21,                'Signal Length',            minval=1,                       inline = '0',   group = 'Signal Line Settings' )
+i_sigLine       = input.bool    ( true,             '',                                                         inline = '1',   group = 'Signal Line Settings' )
+i_c_typ_sig     = input.string  ( 'Dual',           'Color Type',               options=[ 'Single', 'Dual' ],   inline = '1',   group = 'Signal Line Settings')
+i_c_sig         = input.color   ( #ffe600,        'Single',                                                   inline = '1',   group = 'Signal Line Settings')
+i_c_sig_rise    = input.color   ( #00ff00,        'Dual Rising',                                              inline = '2',   group = 'Signal Line Settings')
+i_c_sig_fall    = input.color   ( #ff0000,        'Dual Falling',                                             inline = '2',   group = 'Signal Line Settings')
+i_WsigLine      = input.int     ( 2,                'Line Width',               minval=1, maxval=4,             inline = '2',   group = 'Signal Line Settings' )
+
+i_scaleHiOn     = input.bool    ( true,             '',                                                         inline = '0',   group = 'Scale Line Settings' )
+i_c_scaleHi     = input.color   ( color.fuchsia,  '',                                                         inline = '0',   group = 'Scale Line Settings' )
+i_scaleHi       = input.float   ( 100,              'Scale High',               minval=100, maxval=100,         inline = '0',   group = 'Scale Line Settings' )
+i_WscaleHi      = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '0',   group = 'Scale Line Settings' )
+
+i_alrtHiOn      = input.bool    ( true,             '',                                                         inline = '1',   group = 'Scale Line Settings' )
+i_c_alrtHi      = input.color   ( color.fuchsia,  '',                                                         inline = '1',   group = 'Scale Line Settings' )
+i_alrtHi        = input.float   ( 50,               'Upper Alert',              minval=-100, maxval=100,        inline = '1',   group = 'Scale Line Settings' )
+i_WalrtHi       = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '1',   group = 'Scale Line Settings' )
+
+i_midLineOn     = input.bool    ( true,             '',                                                         inline = '2',   group = 'Scale Line Settings' )
+i_c_midLine     = input.color   ( color.silver,   '',                                                         inline = '2',   group = 'Scale Line Settings' )
+i_midLine       = input.int     ( 0,                'Midline ....',             minval=0, maxval=0,             inline = '2',   group = 'Scale Line Settings' )
+i_Wmidline      = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '2',   group = 'Scale Line Settings' )
+
+i_alrtLoOn      = input.bool    ( true,             '',                                                         inline = '3',   group = 'Scale Line Settings' )
+i_c_alrtLo      = input.color   ( color.aqua,     '',                                                         inline = '3',   group = 'Scale Line Settings' )
+i_alrtLo        = input.float   ( -50,              'Lower Alert',              minval=-100, maxval=100,        inline = '3',   group = 'Scale Line Settings' )
+i_WalrtLo       = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '3',   group = 'Scale Line Settings' )
+
+i_scaleLoOn     = input.bool    ( true,             '',                                                         inline = '4',   group = 'Scale Line Settings' )
+i_c_scaleLo     = input.color   ( color.aqua,     '',                                                         inline = '4',   group = 'Scale Line Settings' )
+i_scaleLo       = input.float   ( -100,             'Scale Low',                minval=-100, maxval=-100,       inline = '4',   group = 'Scale Line Settings' )
+i_WscaleLo      = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '4',   group = 'Scale Line Settings' )
+
+i_infoBox       = input.bool    ( true,             'Show Info Box',                                            inline = '0',   group = 'Information Panel' )
+i_alrtInfo      = input.bool    ( true,             'Show Alert Levels Info',                                   inline = '1',   group = 'Information Panel' )
+i_signalInfo    = input.bool    ( true,             'Show Signal Line Info',                                    inline = '1',   group = 'Information Panel' )
+i_decimalP      = input.int     ( 2,                'Decimal Places',           minval=0, maxval=10,            inline = '2',   group = 'Information Panel' )
+i_boxOffSet     = input.int     ( 5,                'Info Box Offset',          minval=1, maxval=50,            inline = '3',   group = 'Information Panel' )
+
+var label Infobox = na
+
+///////////////////////////////////////////////////////////////////////////////
+// Function declarations
+
+f_delta ( P, X ) =>
+    X - P > 0
+
+f_truncdNum ( Val, DecPl ) =>
+    Fact = math.pow(10, DecPl)
+    int(Val * Fact) / Fact
+
+     // decimal truncation
+
+f_chandeMomentum ( P, X ) =>    // P is closing prices  // X is period length of chande momentum
+    m = ta.change(P)
+    a = m > 0 ? math.abs(m) : 0.0
+    b = m < 0 ? math.abs(m) : 0.0
+    c = math.sum(a, X)
+    d = math.sum(b, X)
+    chandeMom = 100 * ((c - d) / (c + d))
+    chandeMom
+
+     // returns the current Chande Momentum Oscillator value
+
+f_reverseChandeMomentum ( P, X, Y ) => // P: closing prices X: period length of chande momentum Y: test value
+    q = P[1]
+    m = P - q
+    a = m > 0 ? math.abs(m) : 0.0
+    b = m < 0 ? math.abs(m) : 0.0
+    c = math.sum(a[1], X - 1)
+    d = math.sum(b[1], X - 1)
+    y = Y[1]
+    positivereturn = (-c * y - d * y + q * y + 100 * c - 100 * d - 100 * q ) / ( y - 100 )
+    negativereturn = ( c * y + d * y + q * y - 100 * c + 100 * d + 100 * q ) / ( y + 100 )
+    price = positivereturn > i_src[1] ? positivereturn : negativereturn
+    price
+
+     // returns closing price where the Chande Momentum Oscillator would equal input value "Y"
+     // 
+     // e.g. 1: f_reverseChandeMomentum ( src, length, 0 ) 
+     // would return the next closing price which would make Chande Momentum Oscillator = 0
+     // the user can infer from this that 
+     // closing above this price will cause the Chande Momentum Oscillator to cross above the zeroline.
+     // and closing below it will cause the Chande Momentum Oscillator to cross below the zeroline.
+     //
+     // e.g. 2: f_reverseChandeMomentum ( src, length, Chande Momentum ) 
+     // the user can infer from this that
+     // closing exactly on this price will cause the Chande Momentum Oscillator value to stay the same as the previous value
+     // closing above this price will cause the Chande Momentum Oscillator value to increase
+     // and closing below it will cause the Chande Momentum Oscillator value to decrease
+
+f_text_eq ( p, x, d ) =>
+    text_1 = p > x ? 'CMO\n\n Continues Rising Above : ' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d)) : 'CMO\n\n Continues Falling Below (Eq) :' + str.tostring(int(x * math.pow(10, d)) / math.pow(10, d))
+    text_1
+
+f_negVal ( X, D ) =>
+    X > 0 ? str.tostring(f_truncdNum(X, D)) : 'Impossible'
+
+f_crossText ( P, X, T, D ) =>
+    f_delta(P, X) ? 'Cross Above ' + T + ' : ' + f_negVal(X, D) + '\n' : 'Cross Below ' + T + ' : ' + f_negVal(X, D) + '\n'
+
+//////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+chandeMom       = f_chandeMomentum ( i_src, i_length )
+reverseChandeEq = f_reverseChandeMomentum ( i_src, i_length, chandeMom )
+signalLine      = ta.ema ( chandeMom, i_sigLength )
+reverseSignal   = f_reverseChandeMomentum ( i_src, i_length, signalLine )
+alrtHilineCross = f_reverseChandeMomentum ( i_src, i_length, i_alrtHi )
+zerolineCross   = f_reverseChandeMomentum ( i_src, i_length, i_midLine )
+alrtLolineCross = f_reverseChandeMomentum ( i_src, i_length, i_alrtLo )
+
+c_chande        = i_c_typ_line == 'Single' ? i_c_line : reverseChandeEq < i_src ? i_c_line_rise : i_c_line_fall
+c_signal        = i_c_typ_sig  == 'Single' ? i_c_sig  : signalLine > signalLine[1] ? i_c_sig_rise  : i_c_sig_fall
+
+///////////////////////////////////////////////////////////////////////////////
+// Compute Info Label
+
+labelXLoc       = time_close + i_boxOffSet * ( time_close - time_close[1] )
+
+chandeEqText    = f_text_eq   ( i_src, reverseChandeEq, i_decimalP )
+crossZeroText   = f_crossText ( i_src, zerolineCross, 'Zero Line', i_decimalP )
+crossSignalText = i_signalInfo ? f_crossText ( i_src, reverseSignal, 'Signal Line', i_decimalP ) + '\n' : na
+crossAlrtHiText = f_crossText ( i_src, alrtHilineCross, 'Alert Hi', i_decimalP )
+crossAlrtLoText = f_crossText ( i_src, alrtLolineCross, 'Alert Lo', i_decimalP )
+
+infoBoxText = i_alrtInfo ? chandeEqText + '\n\n' + crossSignalText + crossAlrtHiText + '\n' + crossZeroText + '\n' + crossAlrtLoText : chandeEqText + '\n\n' + crossSignalText + crossZeroText
+
+///////////////////////////////////////////////////////////////////////////////
+// InfoBox Plot
+
+if i_infoBox
+    Infobox := label.new ( labelXLoc, i_midLine, infoBoxText, xloc.bar_time, yloc.price, #000000ff, label.style_label_left, color.white )
+    Infobox
+
+label.delete ( Infobox[1] )
+
+//////////////////////////////////////////////////////////////////////////////
+// Plots and Fills
+
+plot  ( chandeMom,                     'Chande Momentum', c_chande,    i_p_w_line, plot.style_linebr )
+plot  ( i_sigLine   ? signalLine : na, 'Signal Line',     c_signal,    i_WsigLine, plot.style_linebr )
+hline ( i_scaleHiOn ? i_scaleHi  : na, 'Scale High Line', i_c_scaleHi, hline.style_solid, i_WscaleHi )
+hline ( i_alrtHiOn  ? i_alrtHi   : na, 'High Alert Line', i_c_alrtHi,  hline.style_dotted, i_WalrtHi )
+hline ( i_midLineOn ? i_midLine  : na, 'Midline',         i_c_midLine, hline.style_dashed, i_Wmidline )
+hline ( i_alrtLoOn  ? i_alrtLo   : na, 'Low Alert Line',  i_c_alrtLo,  hline.style_dotted, i_WalrtLo )
+hline ( i_scaleLoOn ? i_scaleLo  : na, 'Scale Low Line',  i_c_scaleLo, hline.style_solid, i_WscaleLo )
+
+//////////////////////////////////////////////////////////////////////////////
+// End

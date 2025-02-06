@@ -1,0 +1,78 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author = The_Caretaker
+// @version=4
+// Much respect to the original creator of this idea Dimitris Tsokakis
+// An indicator which removes one bar of lag from simple moving average crossover signals with a high degree of accuracy
+// A lazy Saturday morning script that got a bit out of hand :)
+// Feel free to reuse or develop this script further, please drop me a note below if you find it useful.
+
+study ( "Anticipated Simple Moving Average Crossover Indicator","ASMAXI", overlay = false)
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+price       = input ( close,        "Price Source", input.source )
+
+fast_rsma   = input ( 1,      "Fast SMA [ 1 - 5 ]", input.integer, minval = 1, maxval = 5 )
+slow_rsma   = input ( 2,      "Slow SMA [ 2 - 6 ]", input.integer, minval = 2, maxval = 6 )
+
+sma1_color  = input ( color.red,    "SMA 1 Color",  input.color )
+sma1_len    = input ( 10,           "SMA 1 Length", input.integer, minval = 1)
+
+sma2_color  = input ( color.blue,   "SMA 2 Color",  input.color )
+sma2_len    = input ( 30,           "SMA 2 Length", input.integer, minval = 1)
+
+sma3_color  = input ( color.lime,   "SMA 3 Color",  input.color )
+sma3_len    = input ( 50,           "SMA 3 Length", input.integer, minval = 1)
+
+sma4_color  = input ( color.aqua,   "SMA 4 Color",  input.color )
+sma4_len    = input ( 89,           "SMA 4 Length", input.integer, minval = 1)
+
+sma5_color  = input ( color.purple, "SMA 5 Color",  input.color )
+sma5_len    = input ( 100,          "SMA 5 Length", input.integer, minval = 1)
+
+sma6_color  = input ( color.white,  "SMA 6 Color",  input.color )
+sma6_len    = input ( 200,          "SMA 6 Length", input.integer, minval = 1)
+
+///////////////////////////////////////////////////////////////////////////////
+// Function Declaration
+
+anticipated_cross_function ( P, X, Y ) => ( X * ( Y - 1 ) * sma ( P, Y - 1 ) - Y * ( X - 1 ) * sma ( P, X - 1 ) ) / ( Y - X )
+
+rsma_len ( x ) => x == 1 ? sma1_len : 
+     x == 2 ? sma2_len :
+     x == 3 ? sma3_len :
+     x == 4 ? sma4_len :
+     x == 5 ? sma5_len :
+     sma6_len 
+
+rsma_color ( x ) => x == 1 ? sma1_color :
+     x == 2 ? sma2_color :
+     x == 3 ? sma3_color :
+     x == 4 ? sma4_color :
+     x == 5 ? sma5_color :
+     sma6_color
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+cross_sma = anticipated_cross_function ( price, rsma_len ( fast_rsma ), rsma_len ( slow_rsma ) )
+
+anticipated_cross       = crossover ( cross_sma, price ) or crossunder ( cross_sma, price )
+anticipated_cross_color = crossover ( cross_sma, price ) or crossunder ( cross_sma, price ) ? rsma_color ( fast_rsma ) : rsma_color ( slow_rsma )
+
+///////////////////////////////////////////////////////////////////////////////
+// Plots
+
+plot      ( price,      "Cross Fast Plot", rsma_color ( fast_rsma ), editable = false )
+plot      ( cross_sma,  "Cross Slow Plot", rsma_color ( slow_rsma ), editable = false )
+
+plotshape ( anticipated_cross ? price : na, "Anticipated Cross", shape.arrowdown, location.abovebar, crossover ( price , cross_sma ) ? rsma_color ( fast_rsma ) : rsma_color ( slow_rsma ), size = size.small, editable = false )
+
+///////////////////////////////////////////////////////////////////////////////
+// Alerts
+
+alertcondition ( anticipated_cross, "Anticipated SMA Cross Alert", "Anticipated SMA Cross")
+
+///////////////////////////////////////////////////////////////////////////////
+// End

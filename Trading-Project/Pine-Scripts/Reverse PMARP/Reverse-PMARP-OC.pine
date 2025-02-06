@@ -1,0 +1,204 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// @version=5
+//
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author = The_Caretaker
+// © The_Caretaker
+//
+// Feel free to reuse or develop this script further.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+// Indicator declaration
+
+indicator ( 'On Chart Reverse PMARP', 'OC RPMARP', overlay = true, precision = 2, explicit_plot_zorder = true )
+
+///////////////////////////////////////////////////////////////////////////////
+// Parameter string variable declarations
+
+var string s_pmarp  = 'Price Moving Average Ratio Percentile'
+var string s_HML    = 'High to Mid to Low'
+var string s_HL     = 'High to Low'
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+i_src_price         = input.source  ( close,        'Price Source',                                                                                 inline = '1',     group = 'Main Properties')
+i_show_ma           = input.bool    ( true,         'Show Moving Average',                                                                          inline = '2',     group = 'Main Properties')
+i_c_ma              = input.color   ( #fbff00,    '',                                                                                             inline = '2',     group = 'Main Properties')
+i_ma_typ            = input.string  ( 'EMA',        'MA Type',                  options=[ 'SMA', 'EMA', 'WMA', 'RMA', 'HMA' ],                      inline = '4',     group = 'Main Properties')
+i_ma_len            = input.int     ( 20,           'Length.',                  minval=1,                                                           inline = '4',     group = 'Main Properties')
+
+i_pmarp_lookback    = input.int     ( 350,          'PMARP Length',             minval=100, maxval=5000,                                            inline = '1',     group = 'PMARP Properties')
+
+
+i_scale_hi_line_on  = input.bool    ( true,         '',                                                                                             inline = '1',     group = 'PMARP Level Settings')
+i_c_hi_scale        = input.color   ( #ff00b380,  '',                                                                                             inline = '1',     group = 'PMARP Level Settings')
+i_hi_alert_line_on  = input.bool    ( true,         '',                                                                                             inline = '2',     group = 'PMARP Level Settings')
+i_c_hi_alert        = input.color   ( #ff00b380,  '',                                                                                             inline = '2',     group = 'PMARP Level Settings')
+i_hi_test_line_on   = input.bool    ( true,         '',                                                                                             inline = '3',     group = 'PMARP Level Settings')
+i_c_hi_test         = input.color   ( #88888881,  '',                                                                                             inline = '3',     group = 'PMARP Level Settings')
+i_mid_line_on       = input.bool    ( true,         '',                                                                                             inline = '4',     group = 'PMARP Level Settings')
+i_c_mid_line        = input.color   ( #88888881,  '',                                                                                             inline = '4',     group = 'PMARP Level Settings')
+i_lo_test_line_on   = input.bool    ( true,         '',                                                                                             inline = '5',     group = 'PMARP Level Settings')
+i_c_lo_test         = input.color   ( #88888881,  '',                                                                                             inline = '5',     group = 'PMARP Level Settings')
+i_lo_alert_line_on  = input.bool    ( true,         '',                                                                                             inline = '6',     group = 'PMARP Level Settings')
+i_c_lo_alert        = input.color   ( #8c00ff86,  '',                                                                                             inline = '6',     group = 'PMARP Level Settings')
+i_scale_lo_line_on  = input.bool    ( true,         '',                                                                                             inline = '7',     group = 'PMARP Level Settings')
+i_c_lo_scale        = input.color   ( #8c00ff86,  '',                                                                                             inline = '7',     group = 'PMARP Level Settings')
+
+
+i_scale_hi_pmarp    = input.float   ( 100,          'Scale High',            minval=100, maxval=100,                                                inline = '1',     group = 'PMARP Level Settings')
+i_hi_alert_pmarp    = input.float   ( 99,           'Hi Alert',              minval=0.1, maxval=100, step=0.01,                                     inline = '2',     group = 'PMARP Level Settings')
+i_hi_test_pmarp     = input.float   ( 85,           'Hi Test',               minval=0.1, maxval=100, step=0.01,                                     inline = '3',     group = 'PMARP Level Settings')
+i_midline_pmarp     = input.float   ( 50,           'Mid Line',              minval=50, maxval=50,                                                  inline = '4',     group = 'PMARP Level Settings')
+i_lo_test_pmarp     = input.float   ( 15,           'Lo Test',               minval=0.1, maxval=100, step=0.01,                                     inline = '5',     group = 'PMARP Level Settings')
+i_lo_alert_pmarp    = input.float   ( 1,            'Lo Alert',              minval=0.0, maxval=100, step=0.01,                                     inline = '6',     group = 'PMARP Level Settings')
+i_scale_lo_pmarp    = input.float   ( 0,            'Scale Low',             minval=0, maxval=0,                                                    inline = '7',     group = 'PMARP Level Settings')
+
+
+i_show_signal_ma    = input.bool    ( true,         'Show PMARP MA',                                                                                inline = '1',     group = 'PMARP MA Settings')
+i_signal_ma_Len     = input.int     ( 20,           'PMARP MA Length',          minval=1,                                                           inline = '2',     group = 'PMARP MA Settings')
+i_signal_ma_typ     = input.string  ( 'SMA',        'PMARP MA Type',            options=[ 'SMA', 'EMA', 'WMA', 'RMA' ],                             inline = '2',     group = 'PMARP MA Settings')
+i_c_typ_sig         = input.string  ( 'Dual',       'Color Type',               options=[ 'Single', 'Dual' ],                                       inline = '3',     group = 'PMARP MA Settings')
+i_c_sig             = input.color   ( #e4c2ff,    'Single Color/ Dual color (Rising)',                                                            inline = '3',     group = 'PMARP MA Settings')
+i_c_sig_fall        = input.color   ( #ff00ff,    'Dual Color (Falling)',                                                                         inline = '3',     group = 'PMARP MA Settings')
+
+
+i_c_alert_transp    = input.int     ( 70,           'Signal Bars Transparency', minval=0, maxval=100,                                               inline = '1',     group = 'Signal Bar Settings')
+i_bg_hi_signal_on   = input.bool    ( true,         'Hi Signal Bars',                                                                               inline = '2',     group = 'Signal Bar Settings')
+i_c_hi_bg_alert     = input.color   ( #ff00b3,    '',                                                                                             inline = '2',     group = 'Signal Bar Settings')
+i_bg_lo_signal_on   = input.bool    ( true,         'Lo Signal Bars',                                                                               inline = '3',     group = 'Signal Bar Settings')
+i_c_lo_bg_alert     = input.color   ( #8c00ff,    '',                                                                                             inline = '3',     group = 'Signal Bar Settings')
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Variable declarations
+
+var pmarArray = array.new<float>( i_pmarp_lookback, na )
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Function declarations
+
+f_ma ( float _price, _typ, simple int _len ) =>                                                 // Returns a moving average ( type _typ and period length _len ) of _price
+    ma = switch _typ
+        'SMA' => ta.sma ( _price, _len )  
+        'EMA' => ta.ema ( _price, _len )  
+        'WMA' => ta.wma ( _price, _len )  
+        'RMA' => ta.rma ( _price, _len )    
+        => ta.hma ( _price, _len )         
+
+f_pmar ( float _price, _typ, simple int _len ) =>                                               // Returns the ratio of _price to moving average ( type _typ with period length _len )
+    float ma = f_ma ( _price, _typ, _len )
+    float pmar = _price / ma 
+
+f_pmarp ( simple int _pmarp_len, float _pmar ) =>                                               // Returns the percentile of _pmar over a period of _pmarp_len
+    array.unshift ( pmarArray, _pmar )
+    if array.size ( pmarArray ) > _pmarp_len + 1
+        array.pop ( pmarArray )
+    float percentile = array.percentrank ( pmarArray, 0 )
+
+f_rev_PSMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to simple moving average with period length _len
+    float pSum = math.sum ( _price, _len - 1 ) [1]
+    float price = ( - pSum * _testVal ) / ( _testVal - _len )
+
+f_rev_PEMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to exponential moving average with period length _len
+    float alpha = 2 / ( _len + 1 )
+    float pEMA  = ta.ema ( _price, _len ) [1]
+    float price = (( alpha * _testVal * pEMA ) - ( _testVal * pEMA )) / (( alpha * _testVal ) -1 )
+
+f_rev_PRMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to exponential moving average with period length _len
+    float alpha = 1 / _len
+    float pRMA  = ta.rma ( _price, _len ) [1]
+    float price = (( alpha * _testVal * pRMA ) - ( _testVal * pRMA )) / (( alpha * _testVal ) -1 )
+
+f_open_WMA ( float _price, simple int _len ) =>                                                 // Returns multiple values from the calculation of a weighted moving average with period length _len
+    float norm = 0.0  // normalizing sum of weights
+    float sum = 0.0   // sum of weighted data
+    float lenSq = _len * _len
+    for i = _len - 1 to 1
+        norm := norm + (( _len - i ) * _len )
+        sum  := sum + _price[i] * (( _len - i ) * _len ) 
+    float WMA = ( sum + _price * lenSq ) / ( norm + lenSq )
+    [ WMA, norm, sum, lenSq ]
+
+f_rev_PWMAR ( float _price, simple int _len, float _testVal ) =>                                // Returns a reverse engineered price for _testVal ratio of _price to weighted moving average with period length _len
+    [ WMA, norm, sum, len2 ] = f_open_WMA ( _price, _len )
+    float price = ( - _testVal * sum ) / ( len2 * _testVal - len2 - norm )
+
+f_open_HMA ( float _price, simple int _len, float _testVal ) =>                                 // Returns multiple values from the calculation of a hull moving average with a period _len
+    int len_2 = math.floor ( _len / 2 )
+    int len_3 = math.floor ( math.sqrt ( _len ))
+    [ WMA1, norm1, sum1, WMA1lenSq ] = f_open_WMA ( _price, _len )
+    [ WMA2, norm2, sum2, WMA2lenSq ] = f_open_WMA ( _price, len_2 )
+    float rawHMA = ( 2 * WMA2 ) - WMA1
+    [ HMA, norm3, sum3, HMAlenSq ] = f_open_WMA ( rawHMA, len_3 )
+    [ norm1, norm2, norm3, sum1, sum2, sum3, WMA1lenSq, WMA2lenSq, HMAlenSq ]
+
+f_rev_PHMAR ( float _price, simple int _len, float _testVal ) =>                                    // Returns a reverse engineered price for _testVal ratio of _price to hull moving average with a period _len
+    [ n1, n2, n3, s1, s2, s3, x2, y2, z2 ] = f_open_HMA ( _price, _len, _testVal )
+    float numerator   = ( s1*y2*z2*_testVal - y2*s3*x2*_testVal - 2*s2*z2*x2*_testVal - n1*y2*s3*_testVal - 2*n1*s2*z2*_testVal + s1*n2*z2*_testVal - n2*s3*x2*_testVal - n1*n2*s3*_testVal )
+    float denominator = ( y2*z2*x2*_testVal + 2*n1*y2*z2*_testVal - y2*z2*x2 - n2*z2*x2*_testVal - n1*y2*z2 - y2*n3*x2 - n2*z2*x2 - n1*y2*n3 - n1*n2*z2 - n2*n3*x2 - n1*n2*n3 )
+    float price = numerator / denominator
+
+f_rev_PMAR ( float _price, simple int _pmarLen, _type, float _testVal ) =>                          // Returns a reverse engineered price for _testVal ratio of _price to moving average ( type _typ and period _len )
+    switch _type
+        "SMA" => f_rev_PSMAR ( _price, _pmarLen, _testVal )
+        "EMA" => f_rev_PEMAR ( _price, _pmarLen, _testVal )
+        "WMA" => f_rev_PWMAR ( _price, _pmarLen, _testVal )
+        "RMA" => f_rev_PRMAR ( _price, _pmarLen, _testVal )
+        => f_rev_PHMAR ( _price, _pmarLen, _testVal )
+
+f_rev_pmarp ( float _price, simple int _pmarLen, simple int _pmarpLen, _type, float _testVal ) =>   // Returns a reverse engineered price for _testVal percentile of ratio of _price to moving average ( type _typ and period _len ) of _price
+    float test_PMAR = array.percentile_nearest_rank ( pmarArray, _testVal )
+    f_rev_PMAR ( _price, _pmarLen, _type, test_PMAR )
+
+f_clrSlct ( float _val, string _type, color _single, color _falling ) =>                           // Returns a color determined by series _val from user settings of single, or dual from single or falling                               
+    _type == 'Single' ? _single : _val > _val[1] ? _single : _falling
+
+
+/////////////////////////////////////////////////////////////////////////////// 
+// Calculations
+
+float ma          = f_ma ( i_src_price, i_ma_typ, i_ma_len )
+float pmar        = f_pmar ( i_src_price, i_ma_typ, i_ma_len )
+float pmarp       = f_pmarp ( i_pmarp_lookback, pmar )
+float signal_ma   = f_ma  ( pmarp,  i_signal_ma_typ, i_signal_ma_Len )
+
+float SigMA       = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, signal_ma )
+float OCscaleHi   = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, 100 )
+float hiAlrtPrice = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_hi_alert_pmarp )
+float hiRevPrice  = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_hi_test_pmarp )
+float midline     = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, 50 )               
+float loRevPrice  = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_lo_test_pmarp ) 
+float loAlrtPrice = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, i_lo_alert_pmarp ) 
+float OCscaleLo   = f_rev_pmarp ( i_src_price, i_ma_len, i_pmarp_lookback, i_ma_typ, 0 ) 
+
+color c_plotSig   = f_clrSlct ( SigMA, i_c_typ_sig, i_c_sig, i_c_sig_fall )
+
+bool p_hi_alert   = close >= hiAlrtPrice
+bool p_lo_alert   = close <= loAlrtPrice
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Line plot
+
+plot ( i_show_ma          ? ma          : na,   'Moving Average',     i_c_ma,       1,  plot.style_line )
+plot ( i_show_signal_ma   ? SigMA       : na,   'RPMARP MA',          c_plotSig,    1,  plot.style_line )
+
+plot ( i_scale_hi_line_on ? OCscaleHi   : na,   'Scale High',   i_c_hi_scale,   1, plot.style_line )
+plot ( i_hi_alert_line_on ? hiAlrtPrice : na,   'Alert High',   i_c_hi_alert,   1, plot.style_line )
+plot ( i_hi_test_line_on  ? hiRevPrice  : na,   'Test High',    i_c_hi_test,    1, plot.style_line )
+plot ( i_mid_line_on      ? midline     : na,   'Midline',      i_c_mid_line,   1, plot.style_line )
+plot ( i_lo_test_line_on  ? loRevPrice  : na,   'Test Low',     i_c_lo_test,    1, plot.style_line )
+plot ( i_lo_alert_line_on ? loAlrtPrice : na,   'Alert Low',    i_c_lo_alert,   1, plot.style_line )
+plot ( i_scale_lo_line_on ? OCscaleLo   : na,   'Scale Low',    i_c_lo_scale,   1, plot.style_line )
+
+bgcolor ( p_hi_alert and i_bg_hi_signal_on ? color.new (i_c_hi_bg_alert, i_c_alert_transp ) : na )
+bgcolor ( p_lo_alert and i_bg_lo_signal_on ? color.new (i_c_lo_bg_alert, i_c_alert_transp ) : na )
+
+
+///////////////////////////////////////////////////////////////////////////////
+// End

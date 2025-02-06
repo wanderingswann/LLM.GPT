@@ -1,0 +1,133 @@
+//
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @version = 4
+// @author  = The_Caretaker
+// © The_Caretaker
+//
+// Bollinger Band Calculation Tool
+//
+// Huge respect to John A Bollinger the inventor of Bollinger Bands®
+//
+// Here I have taken the standard built in Tradingview Bollinger Band script and modified it to derive a tool which will calculate...
+// The resultant closing price levels of the Basis SMA and the Upper and Lower Bollinger Bands when given a test closing price.
+//
+// Feel free to reuse or develop this script further, please drop me a note below if you find it useful.
+
+study ( "Bollinger Band Calculation Tool", "BB CT", overlay = true )
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+i_basisLength   = input ( 20,           "Basis Length",         input.integer, minval = 1,                              group = "Bollinger Band Settings" )
+i_srcPrice      = input ( close,        "Source Price",         input.source,                                           group = "Bollinger Band Settings" )
+i_mult          = input ( 2.0,          "Std Dev",              input.float,   minval = 0.001, maxval = 50, step = 0.2, group = "Bollinger Band Settings" )
+i_useTestPrice  = input ( true,         "Use Test Price",       input.bool,                                             group = "Test Closing Price Settings" )
+i_testPrice     = input ( 2700,         "Test Closing Price",   input.float,   minval = 0, step = 10,                   group = "Test Closing Price Settings" )
+i_decimalP      = input ( 2,            "Decimal Places",       input.integer, minval = 0, maxval = 10,                 group = "Test Closing Price Settings" )
+i_boxOffSet     = input ( 3,            "Info Box Offset",      input.integer, minval = 1, maxval = 50,                 group = "Test Closing Price Settings" )
+i_testLineWidth = input ( 1,            "Test Line Width",      input.integer, minval = 1, maxval = 4,                  group = "Test Closing Price Settings" )
+
+i_c_clsAbvBnd   = input ( color.lime,   "Above Upper Band",     input.color,                                            group = "Test Label Colors" )
+i_c_clsBtwnBnd  = input ( color.blue,   "Between Bands",        input.color,                                            group = "Test Label Colors" )
+i_c_clsBlwBnd   = input ( color.red,    "Below Lower Band",     input.color,                                            group = "Test Label Colors" )
+i_c_testText    = input ( color.white,  "Text",                 input.color,                                            group = "Test Label Colors" )
+
+i_c_barAbvOpen  = input ( color.lime,   "Test Above Open",      input.color,                                            group = "Test Bar Colors" )
+i_c_barBlwOpen  = input ( color.red,    "Test Below Open",      input.color,                                            group = "Test Bar Colors" )
+i_c_barBorder   = input ( color.white,  "Border",               input.color,                                            group = "Test Bar Colors" )
+
+///////////////////////////////////////////////////////////////////////////////
+// Function Declarations
+
+f_trcNum ( Val, DecPl ) => 
+    Fact = pow ( 10, DecPl )
+    return = int( Val * Fact) / Fact
+     
+     // decimal truncation
+
+f_isZero (val, eps) => abs(val) <= eps
+
+f_Sum ( fst, snd ) =>
+    EPS = 1e-10
+    res = fst + snd
+    if f_isZero ( res, EPS )
+        res := 0
+    else
+        if not f_isZero ( res, 1e-4 )
+            res := res
+        else
+            15
+
+f_testBasis ( price, testPrice, length ) =>
+    priorSum = sum ( price[1], length - 1 )
+    return = ( priorSum + testPrice ) / length
+
+f_testDev ( price, testPrice, length)  => 
+    pSum = sum ( price[1], length - 1 )
+    testAverage = ( pSum + testPrice ) / length
+    testSumOfSquareDeviations = 0.0
+    for i = 1 to length - 1
+        testSum = ( f_Sum ( price[i], - testAverage ) )
+        testSumOfSquareDeviations := testSumOfSquareDeviations + testSum * testSum
+    return = sqrt (( testSumOfSquareDeviations + ( f_Sum ( testPrice, - testAverage ) * f_Sum ( testPrice, - testAverage ))) / length )
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+basis       = sma ( i_srcPrice, i_basisLength)
+devRaw      = stdev ( i_srcPrice, i_basisLength )
+dev         = i_mult * devRaw
+upper       = basis + dev
+lower       = basis - dev < 0 ? 0 : basis - dev
+
+testBasis   = f_testBasis ( i_srcPrice, i_testPrice, i_basisLength )
+testDevRaw  = f_testDev   ( i_srcPrice, i_testPrice, i_basisLength )
+testDev     = testDevRaw * i_mult
+testUpper   = testBasis + testDev
+testLower   = testBasis - testDev < 0 ? 0 : testBasis - testDev
+
+plotBasis   = barstate.isconfirmed ? basis : i_useTestPrice ? testBasis : basis
+plotUpper   = barstate.isconfirmed ? upper : i_useTestPrice ? testUpper : upper
+plotLower   = barstate.isconfirmed ? lower : i_useTestPrice ? testLower : lower
+
+lblXLoc     = time_close + ( ( time_close - time_close[1] ) * i_boxOffSet )
+
+testClose   = i_testPrice > testUpper ? "Closes Above Upper Band" : i_testPrice < testUpper and i_testPrice > testLower ?  "Closes Between Bands" : "Closes Below Lower Band"
+
+testText    =  "  Test Close Price = "         + tostring ( f_trcNum ( i_testPrice, i_decimalP ) )
+             + "\n\n  " + testClose
+             + "\n\n  Resulting BB Upper = "   + tostring ( f_trcNum ( testUpper,   i_decimalP ) )
+             + "\n\n  Resulting BB Basis   = " + tostring ( f_trcNum ( testBasis,   i_decimalP ) )
+             + "\n\n  Resulting BB Lower = "   + tostring ( f_trcNum ( testLower,   i_decimalP ) )
+
+c_testBar   = i_useTestPrice and i_testPrice > open ? i_c_barAbvOpen : i_useTestPrice ? i_c_barBlwOpen : na
+c_testLbl   = i_testPrice > testUpper ? i_c_clsAbvBnd : i_testPrice < testUpper and i_testPrice > testLower ? i_c_clsBtwnBnd : i_c_clsBlwBnd
+
+///////////////////////////////////////////////////////////////////////////////
+// Plots
+
+p_basis     = plot ( i_useTestPrice ? basis[1] : basis , "Basis", color.red,  transp = 0, offset = i_useTestPrice ? -1 : 0 )
+p_upper     = plot ( i_useTestPrice ? upper[1] : upper , "Upper", color.teal, transp = 0, offset = i_useTestPrice ? -1 : 0 )
+p_lower     = plot ( i_useTestPrice ? lower[1] : lower , "Lower", color.teal, transp = 0, offset = i_useTestPrice ? -1 : 0 )
+
+fill ( p_upper, p_lower, color = #198787, transp = 95, title = "Bollinger Bands Fill" )
+
+hline     ( i_useTestPrice ? i_testPrice : na, "Test Close Price Line", color.white )
+
+plotshape ( i_useTestPrice ? i_testPrice : na, "Test Close Price Label", shape.square, location.absolute, na, transp = 0, offset = 2, text = "Test Close", textcolor = c_testLbl, show_last = 1 )
+
+plotcandle ( open, i_testPrice > open ? i_testPrice : open, i_testPrice < open ? i_testPrice : open, i_testPrice, "Test Bar", c_testBar, bordercolor = i_useTestPrice ? i_c_barBorder : na, show_last = 1 )
+
+testUpperLine = i_useTestPrice ? line.new ( bar_index - 1, upper[1], bar_index, testUpper, xloc.bar_index, extend.none, color.aqua, line.style_solid, width = i_testLineWidth ) : na
+testBasisLine = i_useTestPrice ? line.new ( bar_index - 1, basis[1], bar_index, testBasis, xloc.bar_index, extend.none, #FF0000,    line.style_solid, width = i_testLineWidth ) : na
+testLowerLine = i_useTestPrice ? line.new ( bar_index - 1, lower[1], bar_index, testLower, xloc.bar_index, extend.none, color.aqua, line.style_solid, width = i_testLineWidth ) : na
+
+testLabel     = i_useTestPrice ? label.new ( lblXLoc, i_testPrice, testText, xloc.bar_time, yloc.price, c_testLbl, label.style_label_left, i_c_testText, textalign = text.align_left ) : na
+
+line.delete ( testUpperLine[1])
+line.delete ( testBasisLine[1])
+line.delete ( testLowerLine[1])
+label.delete ( testLabel[1])
+
+///////////////////////////////////////////////////////////////////////////////
+// End

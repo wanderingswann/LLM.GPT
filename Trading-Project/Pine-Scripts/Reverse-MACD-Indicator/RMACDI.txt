@@ -1,0 +1,102 @@
+Introducing the reverse MACD Indicator.
+
+
+This is my Pinescript implementation of the reverse MACD indicator.
+
+Much respect to Mr Johnny Dough the original creator of this idea.
+
+Feel free to reuse this script, drop me a note below if you find this useful.
+
+
+Investopedia defines the MACD as a trend-following momentum indicator that shows the relationship between two moving averages of a security’s price.
+
+The MACD is calculated by subtracting the 26-period Exponential Moving Average ( EMA ) from the 12-period EMA .
+
+The result of that calculation is the MACD line.
+
+
+A nine-day EMA of the MACD called the "signal line," is then plotted on top of the MACD line, which can function as a trigger for buy and sell signals.
+
+Traders may buy the security when the MACD crosses above its signal line and sell—or short—the security when the MACD crosses below the signal line.
+
+Moving Average Convergence Divergence ( MACD ) indicators can be interpreted in several ways, but the more common methods are crossovers, divergences, and rapid rises/falls.
+
+
+MACD triggers technical signals when it crosses above (to buy) or below (to sell) its signal line.
+
+The speed of crossovers is also taken as a signal of a market is overbought or oversold.
+
+MACD helps investors understand whether the bullish or bearish movement in the price is strengthening or weakening.
+
+
+The MACD has a positive value (shown as the red line on the price chart ) whenever the 12-period EMA ( indicated by the blue line on the price chart) is above the 26-period EMA (the red line in the price chart) and a negative value when the 12-period EMA is below the 26-period EMA .
+
+The more distant the MACD is above or below its baseline indicates that the distance between the two EMAs is growing.
+
+The baseline here is the white line.
+
+The Reverse function of the MACD provides value by letting the user know the specific price needed to expect a MACD cross over in the opposite direction.
+
+This function can be used to designate risk parameters for a potential trade if using the MACD as their source of edge, letting the user know exactly where and how much their risk is for a potential trade which can be used to design an effective trading plan.
+Dec 5, 2020
+Release Notes
+By request I have..
+
+Broken the code down into separated functions, and added clear descriptions of function operation.
+
+Altered some variable naming for easier reading.
+Dec 5, 2020
+Release Notes
+Forgot to actually implement one of the newly declared functions.. lol .. done now.
+Dec 5, 2020
+Release Notes
+Added optional RMACD derived Bollinger Bands by request.
+Dec 5, 2020
+Release Notes
+Further expanded the description of the functions for clarity.
+Dec 25, 2020
+Release Notes
+Corrected function Price and Length variable naming.
+Dec 25, 2020
+Release Notes
+Another little tidy up
+Jan 20, 2021
+Release Notes
+I have brought the original idea to its logical conclusion for the MACD by creating a new function which also computes the price level required to cross the MACD with its signal line.
+This allows the user to quickly see all of the most relevant information from the MACD and the actual price levels where the indicator will change its posture.
+
+For the sake of clarity I have changed the EQ level to an orange plot
+
+The signal line crossover level plots blue when the macd is above the signal line and red below it.
+
+The zero line is white as usual
+
+I have added an infobox which will show
+
+    Whether the MACD is falling or rising
+    the price level which will make the MACD to change from rising to falling or vice versa
+    the price level which will cause the MACD to cross the signal line
+    the price level which will cause the MACD to cross the zero line
+
+Jan 23, 2021
+Release Notes
+Created and added SMA signal line cross function by request..
+
+Added
+
+    optional SMA signal line
+
+
+
+Modified textbox info and coloring logic for clarity
+Jan 23, 2021
+Release Notes
+minor color change
+Jan 23, 2021
+Release Notes
+Altered input variables naming for clarity
+Feb 4, 2023
+Release Notes
+Upgraded to Pinescript version 5
+Added plot & color options.
+Added settings headings.

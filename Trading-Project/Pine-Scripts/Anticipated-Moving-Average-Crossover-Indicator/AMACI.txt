@@ -1,0 +1,56 @@
+Introducing the on chart moving average crossover indicator.
+
+
+
+This is my On Chart Pinescript implementation of the Anticipated Simple Moving Average Crossover idea.
+
+This indicator plots 6 user defined moving averages.
+
+It also plots the 5 price levels required on the next close to cross a user selected moving average with the 5 other user defined moving averages
+
+It also gives signals of anticipated moving average crosses as arrows on chart and also as tradingview alerts with a very high degree of accuracy
+
+Much respect to the creator of the original idea Mr. Dimitris Tsokakis
+
+
+Moving Averages
+
+A moving average simplifies price data by smoothing it out by averaging closing prices and creating one flowing line which makes seeing the trend easier.
+
+Moving averages can work well in strong trending conditions, but poorly in choppy or ranging conditions.
+Adjusting the time frame can remedy this problem temporarily, although at some point, these issues are likely to occur regardless of the time frame chosen for the moving average(s).
+
+While Exponential moving averages react quicker to price changes than simple moving averages. In some cases, this may be good, and in others, it may cause false signals.
+
+Moving averages with a shorter look back period (20 days, for example) will also respond quicker to price changes than an average with a longer look back period (200 days).
+
+
+Trading Strategies — Moving Average Crossovers
+
+Moving average crossovers are a popular strategy for both entries and exits. MAs can also highlight areas of potential support or resistance.
+
+The first type is a price crossover, which is when the price crosses above or below a moving average to signal a potential change in trend.
+Another strategy is to apply two moving averages to a chart: one longer and one shorter.
+
+When the shorter-term MA crosses above the longer-term MA, it's a buy signal, as it indicates that the trend is shifting up. This is known as a "golden cross."
+Meanwhile, when the shorter-term MA crosses below the longer-term MA, it's a sell signal, as it indicates that the trend is shifting down. This is known as a "dead/death cross."
+
+MA and MA Cross Strategy Disadvantages
+
+Moving averages are calculated based on historical data, and while this may appear predictive nothing about the calculation is predictive in nature.
+Moving averages are always based on historical data and simply show the average price over a certain time period.
+
+Therefore, results using moving averages can be quite random.
+At times, the market seems to respect MA support/resistance and trade signals, and at other times, it shows these indicators no respect.
+
+One major problem is that, if the price action becomes choppy, the price may swing back and forth, generating multiple trend reversal or trade signals.
+When this occurs, it's best to step aside or utilize another indicator to help clarify the trend.
+
+The same thing can occur with MA crossovers when the MAs get "tangled up" for a period of time during periods of consolidation, triggering multiple losing trades.
+Ensure you use a robust risk management system to avoid getting "Chopped Up" or "Whip Sawed" during these periods.
+Dec 22, 2020
+Release Notes
+Added user defined lower crossover level cutoff factor to correct auto chart focus issues
+Jun 15, 2021
+Release Notes
+Removed transp from plot functions.

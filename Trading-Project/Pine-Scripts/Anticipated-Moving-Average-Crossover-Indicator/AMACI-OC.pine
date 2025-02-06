@@ -1,0 +1,128 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author = The_Caretaker
+// @version=4
+//
+// Much respect to the original creator of this idea Dimitris Tsokakis
+//
+// On Chart indicator which shows the price level required on the next close 
+// to cross the user selected moving average with the 5 other user defined moving averages
+//
+// It also removes one bar of lag from moving average crossover signals with a high degree of accuracy
+//
+// A lazy Saturday morning script that got completely out of control :)
+// Feel free to reuse or develop this script further, please drop me a note below if you find it useful.
+
+study ( "Anticipated Moving Average Crossover Indicator","AMAXI", overlay = true)
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+price       = input ( close,        "Price Source", input.source )
+
+Test_rsma   = input ( 1,      "Test SMA [ 1 - 6 ]", input.integer, minval = 1, maxval = 6 )
+
+sma1_color  = input ( color.red,    "SMA 1 Color",  input.color )
+sma1_len    = input ( 10,           "SMA 1 Length", input.integer, minval = 1)
+
+sma2_color  = input ( color.blue,   "SMA 2 Color",  input.color )
+sma2_len    = input ( 30,           "SMA 2 Length", input.integer, minval = 1)
+
+sma3_color  = input ( color.lime,   "SMA 3 Color",  input.color )
+sma3_len    = input ( 50,           "SMA 3 Length", input.integer, minval = 1)
+
+sma4_color  = input ( color.aqua,   "SMA 4 Color",  input.color )
+sma4_len    = input ( 89,           "SMA 4 Length", input.integer, minval = 1)
+
+sma5_color  = input ( color.purple, "SMA 5 Color",  input.color )
+sma5_len    = input ( 100,          "SMA 5 Length", input.integer, minval = 1)
+
+sma6_color  = input ( color.white,  "SMA 6 Color",  input.color )
+sma6_len    = input ( 200,          "SMA 6 Length", input.integer, minval = 1)
+
+cut         = input ( 3,            "Lower Cutoff Factor")
+
+///////////////////////////////////////////////////////////////////////////////
+// Function Declaration
+
+anticipated_cross_function ( P, X, Y ) => ( X * ( Y - 1 ) * sma ( P, Y - 1 ) - Y * ( X - 1 ) * sma ( P, X - 1 ) ) / ( Y - X )
+
+rsma_len ( x ) => x == 1 ? sma1_len : 
+     x == 2 ? sma2_len :
+     x == 3 ? sma3_len :
+     x == 4 ? sma4_len :
+     x == 5 ? sma5_len :
+     sma6_len 
+
+rsma_color ( x ) => x == 1 ? sma1_color :
+     x == 2 ? sma2_color :
+     x == 3 ? sma3_color :
+     x == 4 ? sma4_color :
+     x == 5 ? sma5_color :
+     sma6_color
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+SMA1 = sma ( close, sma1_len )
+SMA2 = sma ( close, sma2_len )
+SMA3 = sma ( close, sma3_len )
+SMA4 = sma ( close, sma4_len )
+SMA5 = sma ( close, sma5_len )
+SMA6 = sma ( close, sma6_len )
+
+sma_cross_level1 = anticipated_cross_function ( price, rsma_len ( Test_rsma ), sma1_len )
+sma_cross_level2 = anticipated_cross_function ( price, rsma_len ( Test_rsma ), sma2_len )
+sma_cross_level3 = anticipated_cross_function ( price, rsma_len ( Test_rsma ), sma3_len )
+sma_cross_level4 = anticipated_cross_function ( price, rsma_len ( Test_rsma ), sma4_len )
+sma_cross_level5 = anticipated_cross_function ( price, rsma_len ( Test_rsma ), sma5_len )
+sma_cross_level6 = anticipated_cross_function ( price, rsma_len ( Test_rsma ), sma6_len )
+
+anticipated_cross1 = crossover ( sma_cross_level1, price ) or crossunder ( sma_cross_level1, price )
+anticipated_cross2 = crossover ( sma_cross_level2, price ) or crossunder ( sma_cross_level2, price )
+anticipated_cross3 = crossover ( sma_cross_level3, price ) or crossunder ( sma_cross_level3, price )
+anticipated_cross4 = crossover ( sma_cross_level4, price ) or crossunder ( sma_cross_level4, price )
+anticipated_cross5 = crossover ( sma_cross_level5, price ) or crossunder ( sma_cross_level5, price )
+anticipated_cross6 = crossover ( sma_cross_level6, price ) or crossunder ( sma_cross_level6, price )
+
+///////////////////////////////////////////////////////////////////////////////
+// Plots
+
+plot ( SMA1,  "SMA 1", sma1_color, editable = true )
+plot ( SMA2,  "SMA 2", sma2_color, editable = true )
+plot ( SMA3,  "SMA 3", sma3_color, editable = true )
+plot ( SMA4,  "SMA 4", sma4_color, editable = true )
+plot ( SMA5,  "SMA 5", sma5_color, editable = true )
+plot ( SMA6,  "SMA 6", sma6_color, editable = true )
+
+plot ( sma_cross_level1 < price / cut ? price / cut : sma_cross_level1 ,  "SMA Cross Level 1", sma_cross_level1 > close[1] ? rsma_color ( 1 ) : rsma_color ( Test_rsma ), editable = true )
+plot ( sma_cross_level2 < price / cut ? price / cut : sma_cross_level2 ,  "SMA Cross Level 2", sma_cross_level2 > close[1] ? rsma_color ( 2 ) : rsma_color ( Test_rsma ), editable = true )
+plot ( sma_cross_level3 < price / cut ? price / cut : sma_cross_level3 ,  "SMA Cross Level 3", sma_cross_level3 > close[1] ? rsma_color ( 3 ) : rsma_color ( Test_rsma ), editable = true )
+plot ( sma_cross_level4 < price / cut ? price / cut : sma_cross_level4 ,  "SMA Cross Level 4", sma_cross_level4 > close[1] ? rsma_color ( 4 ) : rsma_color ( Test_rsma ), editable = true )
+plot ( sma_cross_level5 < price / cut ? price / cut : sma_cross_level5 ,  "SMA Cross Level 5", sma_cross_level5 > close[1] ? rsma_color ( 5 ) : rsma_color ( Test_rsma ), editable = true )
+plot ( sma_cross_level6 < price / cut ? price / cut : sma_cross_level6 ,  "SMA Cross Level 6", sma_cross_level6 > close[1] ? rsma_color ( 6 ) : rsma_color ( Test_rsma ), editable = true )
+
+plotshape ( crossover ( price , sma_cross_level1 ) ? SMA1 : na, "Anticipated Cross", shape.arrowdown, location.absolute, sma1_color, size = size.normal, editable = true )
+plotshape ( crossunder( price , sma_cross_level1 ) ? SMA1 : na, "Anticipated Cross", shape.arrowup ,  location.absolute, sma1_color, size = size.normal, editable = true )
+plotshape ( crossover ( price , sma_cross_level2 ) ? SMA2 : na, "Anticipated Cross", shape.arrowdown, location.absolute, sma2_color, size = size.normal, editable = true )
+plotshape ( crossunder( price , sma_cross_level2 ) ? SMA2 : na, "Anticipated Cross", shape.arrowup ,  location.absolute, sma2_color, size = size.normal, editable = true )
+plotshape ( crossover ( price , sma_cross_level3 ) ? SMA3 : na, "Anticipated Cross", shape.arrowdown, location.absolute, sma3_color, size = size.normal, editable = true )
+plotshape ( crossunder( price , sma_cross_level3 ) ? SMA3 : na, "Anticipated Cross", shape.arrowup ,  location.absolute, sma3_color, size = size.normal, editable = true )
+plotshape ( crossover ( price , sma_cross_level4 ) ? SMA4 : na, "Anticipated Cross", shape.arrowdown, location.absolute, sma4_color, size = size.normal, editable = true )
+plotshape ( crossunder( price , sma_cross_level4 ) ? SMA4 : na, "Anticipated Cross", shape.arrowup ,  location.absolute, sma4_color, size = size.normal, editable = true )
+plotshape ( crossover ( price , sma_cross_level5 ) ? SMA5 : na, "Anticipated Cross", shape.arrowdown, location.absolute, sma5_color, size = size.normal, editable = true )
+plotshape ( crossunder( price , sma_cross_level5 ) ? SMA5 : na, "Anticipated Cross", shape.arrowup ,  location.absolute, sma5_color, size = size.normal, editable = true )
+plotshape ( crossover ( price , sma_cross_level6 ) ? SMA6 : na, "Anticipated Cross", shape.arrowdown, location.absolute, sma6_color, size = size.normal, editable = true )
+plotshape ( crossunder( price , sma_cross_level6 ) ? SMA6 : na, "Anticipated Cross", shape.arrowup ,  location.absolute, sma6_color, size = size.normal, editable = true )
+
+///////////////////////////////////////////////////////////////////////////////
+// Alerts
+
+alertcondition ( anticipated_cross1, "Anticipated SMA Cross Alert 1", "Anticipated SMA Cross 1")
+alertcondition ( anticipated_cross2, "Anticipated SMA Cross Alert 2", "Anticipated SMA Cross 2")
+alertcondition ( anticipated_cross3, "Anticipated SMA Cross Alert 3", "Anticipated SMA Cross 3")
+alertcondition ( anticipated_cross4, "Anticipated SMA Cross Alert 4", "Anticipated SMA Cross 4")
+alertcondition ( anticipated_cross5, "Anticipated SMA Cross Alert 5", "Anticipated SMA Cross 5")
+alertcondition ( anticipated_cross6, "Anticipated SMA Cross Alert 6", "Anticipated SMA Cross 6")
+
+///////////////////////////////////////////////////////////////////////////////
+// End

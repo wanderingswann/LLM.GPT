@@ -1,0 +1,224 @@
+// 
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @version=5
+// @author  = The_Caretaker
+// © The_Caretaker
+// 
+
+indicator ( 'Reverse Cutlers Relative Strength Index On Chart', 'Reverse Cutlers RSI', true, format.price, precision=2, explicit_plot_zorder = true )  // explicit plot zorder to ensure certain plots are 'in front' of fills
+
+//////////////////////////////////////////////////////////////////////////////
+// Global variable declarations
+
+var label l_infobox = na
+
+var color c_bullF   = color.new ( #008080, 85 )
+var color c_bearF   = color.new ( #800080, 85 )
+var color c_rsiEq   = color.new ( #00ffdd, 0 )
+var color c_sigLi   = color.new ( #ffffff, 0 )
+var color c_scalM   = color.new ( #ffffff, 50 )
+var color c_bullZ   = color.new ( #00ffff, 50 )
+var color c_bearZ   = color.new ( #ff00ff, 50 )
+var color c_alerts  = color.new ( #ffff00, 0 )
+var color c_boxBg   = color.new ( #000000, 50 )
+var color c_boxTx   = color.new ( #ffffff, 0 )
+var color c_testRSI = color.new ( #ff0066, 0 )
+
+var string s_t      = 'Tiny'
+var string s_s      = 'Small'
+var string s_n      = 'Normal'
+var string s_l      = 'Large'
+var string s_h      = 'Huge'
+
+//////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+i_src           = input.source  ( close,        'Input data source',                                                                inline = '1',   group = ' RSI Settings' )
+i_lenRsi        = input.int     ( 12,           'RSI period',                   minval=1,                                           inline = '1',   group = ' RSI Settings' )
+i_lenSigLine    = input.int     ( 8,            'Signal line period',           minval=1,                                           inline = '2',   group = ' RSI Settings' )
+i_typSigLine    = input.string  ( 'SMA',        'MA Type',                      options=['SMA', 'EMA'],                             inline = '2',   group = ' RSI Settings' )
+
+i_plotBar       = input.string  ( 'Current bar',"Plot results for :",           options=['Current bar', 'Next bar'],                inline = '1',   group = ' Plot Settings' )
+
+i_plotRsiEq     = input.bool    ( true,         'Plot :',                                                                           inline = '2',   group = ' Plot Settings' )
+i_c_rsiEq       = input.color   ( c_rsiEq,      'RSI (eq) ..........',                                                              inline = '2',   group = ' Plot Settings' )
+i_lineWRsiEq    = input.int     ( 1,            'Line width',                   minval=1,   maxval=4,                               inline = '2',   group = ' Plot Settings' )
+
+i_plotSigLine   = input.bool    ( true,         'Plot :',                                                                           inline = '3',   group = ' Plot Settings' )
+i_c_sigLine     = input.color   ( c_sigLi,      'Signal Line ......',                                                               inline = '3',   group = ' Plot Settings' )
+i_lineWsigLine  = input.int     ( 1,            'Line width',                   minval=1,   maxval=4,                               inline = '3',   group = ' Plot Settings' )
+
+i_plotMidline   = input.bool    ( true,         'Plot :',                                                                           inline = '4',   group = ' Plot Settings' )
+i_c_scaleMid    = input.color   ( c_scalM,      'Scale Midline....',                                                                inline = '4',   group = ' Plot Settings' )
+i_lineWscaleMid = input.int     ( 1,            'Line width',                   minval=1,   maxval=4,                               inline = '4',   group = ' Plot Settings' )
+
+i_plotTestRsi   = input.bool    ( false,        'Plot :',                                                                           inline = '5',   group = ' Plot Settings' )
+i_c_testRSI     = input.color   ( c_testRSI,    'Test price RSI ..',                                                                inline = '5',   group = ' Plot Settings' )
+i_lineWtestVal  = input.int     ( 1,            'Line width',                   minval=1,   maxval=4,                               inline = '5',   group = ' Plot Settings' )
+i_testVal       = input.float   ( 100,          'Test price',                   minval=1,                                           inline = '5',   group = ' Plot Settings' )
+
+i_plotZones     = input.bool    ( true,         'Plot :',                                                                           inline = '6',   group = ' Plot Settings' )
+i_c_bullZones   = input.color   ( c_bullZ,      'Bull',                                                                             inline = '6',   group = ' Plot Settings' )
+i_c_bearZones   = input.color   ( c_bearZ,      'Bear',                                                                             inline = '6',   group = ' Plot Settings' )
+i_lineWzones    = input.int     ( 1,            'Line width',                   minval=1,   maxval=4,                               inline = '6',   group = ' Plot Settings' )
+
+i_fillZones     = input.bool    ( true,         'Fill. :',                                                                          inline = '7',   group = ' Plot Settings' )
+i_c_bullFill    = input.color   ( c_bullF,      'Bull',                                                                             inline = '7',   group = ' Plot Settings' )
+i_c_bearFill    = input.color   ( c_bearF,      'Bear',                                                                             inline = '7',   group = ' Plot Settings' )
+
+i_plotuserLvls  = input.bool    ( true,         'Plot :',                                                                           inline = '11',  group = ' Plot Settings' )
+i_c_userLvls    = input.color   ( c_alerts,     'User alert levels',                                                                inline = '11',  group = ' Plot Settings' )
+i_lineWuserLvls = input.int     ( 1,            'Line width',                   minval=1,   maxval=4,                               inline = '11',  group = ' Plot Settings' )
+
+i_infoBar       = input.string  ( 'Current bar',"Info results for :",           options=['Current bar', 'Next bar'],                inline = '1',   group = ' Infobox Settings' )
+i_boxSize       = input.string  ( s_n,          "Infobox size",                 options=[s_t, s_s, s_n, s_l, s_h ],                 inline = '1',   group = ' Infobox Settings' )
+
+i_plotInfobox   = input.bool    ( true,         'Show : Infobox',                                                                   inline = '2',   group = ' Infobox Settings' )
+i_sizeInfobox   = input.bool    ( false,        'large',                                                                            inline = '2',   group = ' Infobox Settings' )
+i_infoSpacing   = input.bool    ( false,        'Line spacing',                                                                     inline = '2',   group = ' Infobox Settings' )
+i_infoRsiEq     = input.bool    ( true,         'Show : RSI eq info',                                                               inline = '3',   group = ' Infobox Settings' )
+i_infoMidLine   = input.bool    ( true,         'Show : Midline info',                                                              inline = '4',   group = ' Infobox Settings' )
+i_infoZones     = input.bool    ( true,         'Show : Zone info',                                                                 inline = '5',   group = ' Infobox Settings' )
+i_infoSigLine   = input.bool    ( true,         'Show : Signal line info',                                                          inline = '6',   group = ' Infobox Settings' )
+i_infoRsiTest   = input.bool    ( true,         'Show : Test price RSI',                                                            inline = '7',   group = ' Infobox Settings' )
+i_infoUserV1    = input.bool    ( true,         'Show : Alert level high',                                                          inline = '8',   group = ' Infobox Settings' )
+i_infoUserV2    = input.bool    ( true,         'Show : Alert level low',                                                           inline = '9',   group = ' Infobox Settings' )
+i_c_infobox     = input.color   ( c_boxBg,      'Box color',                                                                        inline = '10',  group = ' Infobox Settings' )
+i_c_boxtext     = input.color   ( c_boxTx,      'Text color',                                                                       inline = '10',  group = ' Infobox Settings' )
+i_decPlaces     = input.int     ( 2,            'Decimal places',               minval=0,   maxval=10,                              inline = '11',  group = ' Infobox Settings' )
+i_offsetBox     = input.int     ( 5,            'Box offset',                   minval=1,   maxval=50,                              inline = '11',  group = ' Infobox Settings' )
+
+i_alertLvlHi    = input.float   ( 90,           'User alert level high',        minval=1,   maxval=99,                              inline = '13',  group = ' Scale & Zone Levels' )
+i_alertLvlLo    = input.float   ( 15,           'User alert level low',         minval=1,   maxval=99,                              inline = '13',  group = ' Scale & Zone Levels' )
+i_scaleHi       = input.int     ( 100,          'Scale high',                   minval=50,  maxval=100,                                             group = ' Scale & Zone Levels' )
+i_critBull      = input.int     ( 80,           'Critical bull',                minval=50,  maxval=99,                                              group = ' Scale & Zone Levels' )
+i_contBull      = input.int     ( 62,           'Control bull',                 minval=1,   maxval=99,                                              group = ' Scale & Zone Levels' )
+i_scaleMid      = input.int     ( 50,           'Scale mid',                    minval=1,   maxval=99,                                              group = ' Scale & Zone Levels' )
+i_contBear      = input.int     ( 38,           'Control bear',                 minval=1,   maxval=50,                                              group = ' Scale & Zone Levels' )
+i_critBear      = input.int     ( 20,           'Critical bear',                minval=1,   maxval=50,                                              group = ' Scale & Zone Levels' )
+i_scaleLo       = input.int     ( 0,            'Scale low',                    minval=0,   maxval=50,                                              group = ' Scale & Zone Levels' )
+
+///////////////////////////////////////////////////////////////////////////////
+// Function declarations
+
+f_cutlers_rsi ( _price, _len ) =>                                                                                           // declare function to calculate Cutlers rsi ( series_price, period_len )
+    _uMove = _price >= _price[1] ? _price - _price[1] : 0                                                                   // returns up move series
+    _dMove = _price <  _price[1] ? _price[1] - _price : 0                                                                   // returns down move series
+    _uSum  = math.sum ( _uMove, _len - 1 )                                                                                  // returns ( len - 1 ) sum of up moves
+    _dSum  = math.sum ( _dMove, _len - 1 )                                                                                  // returns ( len - 1 ) sum of down moves
+    _crsi  = _price >= _price[1] ? 100 - 100 / ( 1 + ( _uSum[1] + _uMove ) / _dSum[1] ) :
+                                   100 - 100 / ( 1 + _uSum[1] / ( _dSum[1] + _dMove ) )                                     // returns Cutlers RSI 
+    _crsi
+
+f_cutlers_rsi_test_price ( _price, _len, _testPrice ) =>                                                                    // declare function to calculate price level for Cutlers rsi ( series_price, period_len, input_test )
+    _uMove = _price >= _price[1] ? _price - _price[1] : 0                                                                   // returns up move series
+    _dMove = _price <  _price[1] ? _price[1] - _price : 0                                                                   // returns down move series
+    _pUSum  = math.sum ( _uMove, _len - 1 )                                                                                 // returns prior ( len - 1 ) sum of up moves
+    _pDSum  = math.sum ( _dMove, _len - 1 )                                                                                 // returns prior ( len - 1 ) sum of down moves
+    _testUmove = _testPrice >= _price ? _testPrice - _price : 0                                                             // returns test up move series
+    _testDmove = _testPrice <  _price ? _price - _testPrice : 0                                                             // returns test down move series
+    _crsi  = _testPrice >= _price[1] ? 100 - 100 / ( 1 + ( _pUSum + _testUmove ) / _pDSum ) :
+                                       100 - 100 / ( 1 + _pUSum / ( _pDSum + _testDmove ) )                                 // returns Cutlers RSI for test price ( _test )
+
+
+f_cutlers_rrsi ( _price, _len, _test ) =>                                                                                   // declare function to reverse calculate price level for Cutlers rsi ( series_price, period_len, input_test )
+    _uMove = _price >= _price[1] ? _price - _price[1] : 0                                                                   // returns up move series
+    _dMove = _price <  _price[1] ? _price[1] - _price : 0                                                                   // returns down move series
+    _uSum  = math.sum ( _uMove, _len - 1 )                                                                                  // returns ( len - 1 ) sum of up moves
+    _dSum  = math.sum ( _dMove, _len - 1 )                                                                                  // returns ( len - 1 ) sum of down moves
+    _rrsi  = ( _price * _test - _uSum * _test - _dSum * _test + 100 * _uSum - 100 * _price ) / ( _test - 100 ) >= _price ? 
+             ( _price * _test - _uSum * _test - _dSum * _test + 100 * _uSum - 100 * _price ) / ( _test - 100 ) :
+             ( _price * _test + _uSum * _test + _dSum * _test - 100 * _uSum ) / ( _test )                                   // returns reverse price level for test input
+    _return = bar_index < _len ? na : _rrsi                                                                                 // returns na until len is reached
+    _rrsi > 0 ? _return : 0                                                                                                 // replaces returned values below zero with zero
+
+// infobox string handling functions
+
+f_size ( x ) =>
+     x == 'Tiny' ? size.tiny :
+     x == 'Small' ? size.small :
+     x == 'Normal' ? size.normal :
+     x == 'Large' ? size.large :
+     size.huge
+
+f_filtVal ( _value, _decPlaces ) => _value > 0 ? str.tostring ( int ( _value * math.pow ( 10, _decPlaces ) ) / math.pow ( 10, _decPlaces ) ) : 'Impossible'  // returns 'impossible' if _value is negative or else decimal truncated value string
+
+f_t_rsiEq ( _price, _lvl, _decP )        => _price >= _lvl ? 'Continues rising above (eq) : '      + f_filtVal ( _lvl, _decP ) + '\n'   : 'Continues falling below (eq) : '    + f_filtVal ( _lvl, _decP ) + "\n"    // returns rsi Eq string
+f_t_cross ( _price, _lvl, _text, _decP ) => _price <  _lvl ? 'Cross above ' + _text + ' : '        + f_filtVal ( _lvl, _decP ) + '\n'   : 'Cross below ' + _text + ' : '       + f_filtVal ( _lvl, _decP ) + '\n'    // returns cross string
+f_t_bullZ ( _price, _lvl, _text, _decP ) => _price <  _lvl ? 'Enters '      + _text + ' above : '  + f_filtVal ( _lvl, _decP ) + '\n'   : 'Exits '       + _text + ' below : ' + f_filtVal ( _lvl, _decP ) + '\n'    // returns bull zone string
+f_t_bearZ ( _price, _lvl, _text, _decP ) => _price <  _lvl ? 'Exits '       + _text + ' above : '  + f_filtVal ( _lvl, _decP ) + '\n'   : 'Enters '      + _text + ' below : ' + f_filtVal ( _lvl, _decP ) + '\n'    // returns bear zone string
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+x_locBox    = time_close + i_offsetBox * ( time_close - time_close[1] )
+
+CRSI        = f_cutlers_rsi ( i_src, i_lenRsi )
+SigLine     = i_typSigLine == 'SMA' ? ta.sma ( CRSI, i_lenSigLine ) : ta.ema ( CRSI, i_lenSigLine )
+SigTestVal  = i_typSigLine == 'SMA' ? math.sum ( CRSI, i_lenSigLine - 1 ) / ( i_lenSigLine - 1 ) : ta.ema ( CRSI, i_lenSigLine )
+testCrsi    = f_cutlers_rsi_test_price ( i_src, i_lenRsi, i_testVal )
+
+RCRsiEq     = f_cutlers_rrsi ( i_src, i_lenRsi, CRSI )
+RSigLine    = f_cutlers_rrsi ( i_src, i_lenRsi, SigTestVal )
+RCritBull   = f_cutlers_rrsi ( i_src, i_lenRsi, i_critBull )
+RContBull   = f_cutlers_rrsi ( i_src, i_lenRsi, i_contBull )
+RMidline    = f_cutlers_rrsi ( i_src, i_lenRsi, i_scaleMid )
+RContBear   = f_cutlers_rrsi ( i_src, i_lenRsi, i_contBear )
+RCritBear   = f_cutlers_rrsi ( i_src, i_lenRsi, i_critBear )
+RuserVal1   = f_cutlers_rrsi ( i_src, i_lenRsi, i_alertLvlHi )
+RuserVal2   = f_cutlers_rrsi ( i_src, i_lenRsi, i_alertLvlLo )
+
+s_infobox   = f_size ( i_boxSize )
+
+infoOffset  = i_infoBar == 'Current bar' ? 0 : 1 
+infoIndex   = i_infoBar == 'Current bar' ? 1 : 0
+plotOffset  = i_plotBar == 'Current bar' ? 0 : 1
+plotIndex   = i_plotBar == 'Current bar' ? 1 : 0
+
+///////////////////////////////////////////////////////////////////////////////
+// Compute infobox
+
+strTestCrsi = str.tostring ( int ( testCrsi[infoIndex] * math.pow ( 10, i_decPlaces )) / math.pow ( 10, i_decPlaces ))
+space       = i_infoSpacing ? '\n' : ''
+t_test      = i_infoRsiTest ? "Test price : " + str.tostring ( int ( i_testVal * math.pow ( 10, i_decPlaces )) / math.pow ( 10, i_decPlaces )) + " = RSI result : " + strTestCrsi : na
+t_rsiEq     = i_infoRsiEq   ? f_t_rsiEq ( i_src, RCRsiEq   [infoIndex], i_decPlaces ) + space : na
+t_sigLine   = i_infoSigLine ? f_t_cross ( i_src, RSigLine  [infoIndex], i_typSigLine + ' Signal line', i_decPlaces ) + space : na
+
+t_critBull  = i_infoZones   ? f_t_bullZ ( i_src, RCritBull [infoIndex], 'bull critical zone',    i_decPlaces ) + space : na
+t_contBull  = i_infoZones   ? f_t_bullZ ( i_src, RContBull [infoIndex], 'bull control zone',     i_decPlaces ) + space : na
+t_midline   = i_infoMidLine ? f_t_cross ( i_src, RMidline  [infoIndex], 'scale mid line',        i_decPlaces ) + space : na
+t_contBear  = i_infoZones   ? f_t_bearZ ( i_src, RContBear [infoIndex], 'bear control zone',     i_decPlaces ) + space : na
+t_critBear  = i_infoZones   ? f_t_bearZ ( i_src, RCritBear [infoIndex], 'bear critical zone',    i_decPlaces ) + space : na
+t_userVal1  = i_infoUserV1  ? f_t_cross ( i_src, RuserVal1 [infoIndex], 'alert level high',      i_decPlaces ) + space : na
+t_userVal2  = i_infoUserV2  ? f_t_cross ( i_src, RuserVal2 [infoIndex], 'alert level low',       i_decPlaces ) : na
+
+t_shown     = i_infoBar     == 'Current bar' ? 'Info shown for : ' : 'Info projected for : '
+t_infobox   = 'Reverse Cutlers RSI\n\n' + t_shown + i_infoBar + '\n\n' + t_rsiEq + t_sigLine + t_critBull + t_contBull + t_midline + t_contBear + t_critBear + t_userVal1 + t_userVal2 + "\n" + t_test
+
+///////////////////////////////////////////////////////////////////////////////
+// Plots & fills
+
+p_RCritBull = plot ( i_plotZones    ? RCritBull [plotIndex] : na, 'Bull critical zone',     i_c_bullZones,  i_lineWzones,    plot.style_linebr, offset = plotOffset, editable = false )
+p_RContBull = plot ( i_plotZones    ? RContBull [plotIndex] : na, 'Bull control zone',      i_c_bullZones,  i_lineWzones,    plot.style_linebr, offset = plotOffset, editable = false )
+p_RCRSImid  = plot ( i_plotMidline  ? RMidline  [plotIndex] : na, 'Scale midline',          i_c_scaleMid,   i_lineWscaleMid, plot.style_linebr, offset = plotOffset, editable = false )
+p_RContBear = plot ( i_plotZones    ? RContBear [plotIndex] : na, 'Bear control zone',      i_c_bearZones,  i_lineWzones,    plot.style_linebr, offset = plotOffset, editable = false )
+p_RCritBear = plot ( i_plotZones    ? RCritBear [plotIndex] : na, 'Bear critical Zone',     i_c_bearZones,  i_lineWzones,    plot.style_linebr, offset = plotOffset, editable = false )
+p_alrtlvl1  = plot ( i_plotuserLvls ? RuserVal1 [plotIndex] : na,  "Control bear level",    i_c_userLvls,   i_lineWuserLvls, plot.style_linebr, offset = plotOffset, editable = false )
+p_alrtlvl2  = plot ( i_plotuserLvls ? RuserVal2 [plotIndex] : na,  "Critical bear level",   i_c_userLvls,   i_lineWuserLvls, plot.style_linebr, offset = plotOffset, editable = false )
+
+fill ( p_RCritBull, p_RContBull, i_fillZones ? i_c_bullFill : na, "Bull control zone fill" ) 
+fill ( p_RCritBear, p_RContBear, i_fillZones ? i_c_bearFill : na, "Bear control zone fill" ) 
+
+p_RRsiEq    = plot ( i_plotRsiEq    ? RCRsiEq   [plotIndex] : na, 'RsiEq',                  i_c_rsiEq,      i_lineWRsiEq,    plot.style_linebr, offset = plotOffset, editable = false )
+p_RSigLine  = plot ( i_plotSigLine  ? RSigLine  [plotIndex] : na, 'SigLine',                i_c_sigLine,    i_lineWsigLine,  plot.style_linebr, offset = plotOffset, editable = false )
+p_testRsi   = plot ( i_plotTestRsi  ? i_testVal [plotIndex] : na, 'Rsi test',               i_c_testRSI,    i_lineWtestVal,  plot.style_linebr, offset = plotOffset, editable = false )
+
+///////////////////////////////////////////////////////////////////////////////
+// Infobox Plot
+
+if i_plotInfobox
+    l_infobox := label.new ( x_locBox, i_src, t_infobox, xloc.bar_time, yloc.price, i_c_infobox, label.style_label_left, i_c_boxtext, s_infobox, textalign = text.align_right )
+    label.delete ( l_infobox[1] )
+
+///////////////////////////////////////////////////////////////////////////////
+// End

@@ -1,0 +1,118 @@
+The Elliott Wave indicator allows users to detect Elliott Wave (EW) impulses as well as corrective segments automatically on the chart. These are detected and displayed serially, allowing users to keep track of the evolution of an impulse or corrective wave.
+
+Fibonacci retracements constructed from detected impulse waves are also included.
+
+This script additionally allows users to get alerted on a wide variety of trigger conditions (see the ALERTS section below).
+
+🔶 SETTINGS
+
+snapshot
+
+
+🔹Source
+
+• "high" -> options high, close, maximum of open/close
+• "low" -> options low, close, minimum of open/close
+
+🔹ZigZag
+
+• The source and length are used to check whether a new Pivot Point is found.
+
+Example:
+• source = high/low, length = 10:
+• There is a new pivot  high when:
+- previous high is higher than current high
+- the highs of 10 bars prior to previous high are all lower
+
+• These pivot  points  are used to form the ZigZag lines, which in their turn are used for pattern recognition
+
+🔶 USAGE
+
+The basic principles we use to identify Elliott Wave impulses are:
+
+• A movement in the direction of the trend (Motive/Impulse wave) is divided in 5 waves (Wave 1 -> 5)
+• The Corrective Wave (against the trend) is divided in 3 waves (Wave A -> C)
+• The waves can be subdivided in smaller waves
+• Wave 2 can’t retrace more than the beginning of Wave 1
+• Wave 4 does not overlap with the price territory of Wave 1
+
+snapshot
+
+
+Here we see an example:
+
+snapshot
+
+
+Let's look at the development:
+
+• 1 bar after point (5) a confirmed 5 Motive Wave pattern is found (1 -> 5; The 5 Waves can also be seen as one large Wave 1).
+• Next, the script draws a set of Fibonacci lines, which are area's where the Corrective Wave potentially will bounce.
+
+snapshot
+
+
+Here we see the fifth wave is getting larger, the previous highest point is updated, and the Wave 5 is larger than Wave 3:
+
+snapshot
+
+snapshot
+
+
+(At this point, the pattern is invalidated, and it display as dotted)
+
+Further progression in time:
+
+snapshot
+
+snapshot
+
+
+At this point, a confirmed "3 Corrective Wave pattern" is found (a -> c)
+
+snapshot
+
+
+When a new high has developed, a circle is drawn (in the same color of the lines)
+
+snapshot
+
+
+However, when the bottom of the drawn box has breached, a red cross will be visualized.
+
+snapshot
+
+
+Further progression:
+
+snapshot
+
+
+Later on, a bearish  confirmed "5 Motive Wave pattern" is found (1 -> 5):
+
+snapshot
+
+
+When a Corrective Wave becomes invalidated, the ABC pattern will display as dashed (not dotted):
+
+snapshot
+
+
+🔶 TECHNIQUES
+
+Pine Script™ introduces methods!
+
+• More information can be found here:
+• Pine Script™ v5 User Manual 👉 Methods
+• Pine Script™ language reference manual 👉 method
+
+🔶 ALERTS
+
+Dynamic alerts are included in the script, you only need to set 1 alert to receive following messages:
+
+• When a new EW Motive Pattern is found (Bullish/Bearish )
+• When a new EW Corrective Pattern is found (Bullish/Bearish )
+• When an EW Motive Pattern is invalidated (Bullish/Bearish )
+• When an EW Corrective Pattern is invalidated (Bullish/Bearish )
+• When possible, a start of a new EW Motive Wave is found (Bullish/Bearish )
+• Here is information how you can set these alerts()

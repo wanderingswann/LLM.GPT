@@ -1,0 +1,83 @@
+Introducing the Reverse Stochastic Momentum Index "On Chart" version
+
+According to Investopedia :
+“The Stochastic Momentum Index (SMI) is a more refined version of the stochastic oscillator, employing a wider range of values and having a higher sensitivity to closing prices.”
+
+The SMI is considered a refinement of the stochastic oscillator developed by William Blau and introduced in 1993 in an attempt to provide a more reliable indicator, less subject to false swings.
+It calculates the distance of the current closing price as it relates to the median of the high/low range of price.
+
+The SMI has a normal range of values between +100 and -100.
+
+When the present closing price is higher than the median, or midpoint value of the high/low range, the resulting value is positive.
+When the current closing price is lower than that of the midpoint of the high/low range, the SMI has a negative value.
+
+Here I have reverse engineered the SMI formula to derive 2 functions.
+
+One function calculates the chart price at which the SMI will reach a particular SMI scale value.
+The second function calculates the chart price at which the SMI will crossover its signal line.
+
+I have employed those functions here to give the "crossover" price levels for :
+
+    Upper alert level ( default 40, color : aqua blue )
+    Mid-Line ( default value 0, color : white )
+    Lower alert level ( default -40, color : purple )
+    Signal line ( default 13, colors : bright red & lime green )
+
+
+
+*And also to give the SMI eq price ( colors : red & green )
+
+The midline, upper and lower alert levels return the closing price which would make SMI equal to their respective values
+The user can infer from this that.....
+
+    Closing above these prices will cause the Stochastic Momentum Index to cross above the associated levels
+    Closing below these prices will cause the Stochastic Momentum Index to cross below the associated levels
+
+
+
+Signal line returns the closing price where Stochastic Momentum Index is equal to its signal line
+The user can infer from this that.....
+
+    Closing above this price will cause the Stochastic Momentum Index to cross above the signal line
+    Closing below this price will cause the Stochastic Momentum Index to cross below the signal line
+
+
+
+SMI eq price returns the closing price which would make the SMI equal to its previous value
+The user can infer from this that.....
+
+    Closing above this price will cause the Stochastic Momentum Index to increase
+    Closing below this price will cause the Stochastic Momentum Index to decrease
+
+
+Note : all returned prices have a returned value filter to replace any values below zero with zero to help prevent auto focus issues.
+
+These levels are displayed as plotted lines on the chart and also as an optional infobox with choice of displayed info.
+This allows the user to see directly on the chart the interplay between the various crossover levels and price action and to precisely plan entries, exits and stops for their SMI based trades.
+
+Traditionally traders and analysts will consider:
+
+Positives values above 40 indicate a bullish trend
+Negative values below -40 indicate a bearish trend .
+
+Common traditional ways to derive signals from the SMI :
+
+When the SMI crosses below -40 and then moves back above it, a buy signal is generated.
+When the SMI crosses above +40 and then moves back below it, a sell signal is generated.
+
+When the SMI line crosses above the signal line. A signal to buy is generated
+When the SMI line crosses below the signal line signal to sell is generated.
+
+When the SMI crosses above the zeroline, signal line and the SMI eq level many interpret that as a full bullish bias signal and take trades only in that direction, vice versa for bearish bias.
+
+Traders also look for divergences between the SMI and price action.
+
+The SMI is often used in conjunction with the Chande Momentum Oscillator or R squared indicator to determine overall market trendiness where the SMI is used to determine the direction of the trend, and also with volume indicators to show if the momentum carries significant selling or buying pressure.
+May 13, 2021
+Release Notes
+Updated Plot Names and plot code layout for easier reading.
+Feb 3, 2023
+Release Notes
+Upgraded to Pinescript Version 5
+Added various plot options.
+Added setting section headers.

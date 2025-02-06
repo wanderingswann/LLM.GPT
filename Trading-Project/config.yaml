@@ -1,0 +1,24 @@
+# Configurable settings (DB, API, Logging)
+
+# API Endpoints Configuration
+api:
+  coin_gecko: "https://api.coingecko.com/api/v3/"
+  coin_market_cap: "https://pro-api.coinmarketcap.com/v1/"
+  google: "https://www.googleapis.com/"
+  nasdaq: "https://api.nasdaq.com/"
+  alpha_vantage: "https://alpha-vantage.p.rapidapi.com/query"
+
+# API Call Limits
+api_limits:
+  coin_gecko: 10000
+  coin_market_cap: 10000
+  alpha_vantage: 500
+
+# Database settings
+database:
+  path: "Data/database.db"
+
+# Logging settings
+logging:
+  level: "INFO"
+  log_file: "Logs/api_log.txt"

@@ -1,0 +1,71 @@
+ntroducing the On Chart Reverse PMARP
+
+    Concept
+
+    The PMAR/PMARP is an indicator which calculates :
+
+    The ratio between a chosen source price and a user defined moving average ( Price Moving Average Ratio ).
+    The percentile of the PMAR over an adjustable lookback period ( Price Moving Average Ratio Percentile ).
+
+    Here I have 'reverse engineered' the PMAR / PMARP formulas to derive several functions.
+
+    These functions calculate the chart price at which the PMARP will cross a particular PMARP level.
+
+    I have employed those functions here to give the "crossover" price levels for :
+
+    Scale high level
+    High alert level
+    High test level
+    Mid-Line
+    Low test level
+    Low alert level
+    Scale low level
+
+    Knowing the price at which these various user defined PMARP levels will be crossed can be useful in setting price levels that trigger components of various strategies.
+
+    For example: A trader can use the reverse engineered upper high alert price level, to set a take profit limit order on a long trade, which was entered when PMARP was low.
+
+    This 'On Chart' RPMARP indicator displays these 'reverse engineered' price levels as plotted lines on the chart.
+    This allows the user to see directly on the chart the interplay between the various crossover levels and price action.
+    This allows for more intuitive Technical Analysis, and allows traders to precisely plan entries, exits and stops for their PMARP based trades.
+
+    It optionally plots the user defined moving average from which the PMARP is derived.
+    It also optionally plots the 'Reverse engineered' midline, test level lines, visual alert level lines, scale max. and min. level lines, and background alert signal bars.
+
+    Main Properties :
+
+    Price Source :- Choice of price values or external value from another indicator ( default *Close ).
+    PMAR Length :- User defined time period to be used in calculating the Moving Average for the Price Moving Average Ratio and the PMAR component of the PMARP ( default *21 ).
+    MA Type :- User defined type of Moving Average which creates the MA for the Price Moving Average Ratio and the PMAR component of the PMARP ( default *EMA ).
+
+    Checkbox and color selection box for the optionally plotted Moving Average line.
+
+    Price Moving Average Ratio Percentile Properties :
+
+    PMARP Length :- The lookback period to be used in calculating the Price Moving Average Ratio Percentile ( default *350 ).
+
+    PMARP Level Settings :
+
+    Scale High :- Scale high level ( Locked at 100 ).
+    Hi Alert :- High alert level ( default *99 ).
+    Hi Test :- High test level ( default *70 ).
+    Lid Line :- Mid line level ( Locked at 50 ).
+    Lo Test :- Low test level ( default *30 ).
+    Lo Alert :- Low alert level ( default *1 ).
+    Scale Low :- Scale low level ( Locked at 0 ).
+
+    Checkboxes and color selection boxes for each of the optionally plotted lines.
+
+    PMARP MA Settings :
+
+    Checkbox to optionally plot 'reverse engineered' PMARP MA line.
+    PMARP MA Length :- The time period to be used in calculating the signal Moving Average for the Line Plot ( default *20 ).
+    PMARP MA Type :- The type of Moving Average which creates the signal Moving Average for the Line Plot ( default *EMA ).
+    Color Type :- User choice from dropdown between "single" or "dual" line color ( default *dual ).
+    Single Color :- Color selection box.
+    Dual Color :- Color selection box. Note: Defines the color of the signal MA when the MA is falling in "dual" line coloring mode.
+
+    Signal Bar Settings :
+
+    Signal Bars Transparency :- Sets the transparency of the vertical signal bars ( default *70 ).
+    Checkboxes and color selection boxes for Upper/Lower alert signal bars. )))

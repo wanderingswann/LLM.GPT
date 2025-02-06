@@ -1,0 +1,234 @@
+//@version=5
+//
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author  = The_Caretaker
+// © The_Caretaker
+//
+// Here I have created a Reverse True Strength Index eq function and..
+// A Reverse True Strength Index signal line cross function
+// 
+// Feel free to reuse or develop this script further, please drop me a note below if you find it useful.
+
+indicator ( 'Reverse True Strength Indicator', 'RTSI', format=format.price, precision=2 )
+
+///////////////////////////////////////////////////////////////////////////////
+// Inputs
+
+i_src           = input.source  ( close,            'Price Source',                                             inline = '1',   group = 'True Strength Index Properties' )
+i_long_len      = input.int     ( 25,               'Long Period',                                              inline = '2',   group = 'True Strength Index Properties' )
+i_short_len     = input.int     ( 13,               'Short Period',                                             inline = '3',   group = 'True Strength Index Properties' )
+
+i_c_typ_line    = input.string  ( 'Single',         'Color Type',               options=[ 'Single', 'Dual' ],   inline = '1',   group = 'True Strength Index Line Settings' )
+i_c_line        = input.color   ( #03fffb,        'Single',                                                   inline = '1',   group = 'True Strength Index Line Settings' )
+i_c_line_rise   = input.color   ( #00ff00,        'Dual Rising',                                              inline = '2',   group = 'True Strength Index Line Settings' )
+i_c_line_fall   = input.color   ( #ff0000,        'Dual Falling',                                             inline = '2',   group = 'True Strength Index Line Settings' )
+i_p_w_line      = input.int     ( 2,                'Line Width',               minval=1, maxval=4,             inline = '2',   group = 'True Strength Index Line Settings' )
+
+i_sigLength     = input.int     ( 21,               'Signal Length',            minval=1,                       inline = '0',   group = 'Signal Line Settings' )
+i_sigLine       = input.bool    ( true,             '',                                                         inline = '1',   group = 'Signal Line Settings' )
+i_c_typ_sig     = input.string  ( 'Single',         'Color Type',               options=[ 'Single', 'Dual' ],   inline = '1',   group = 'Signal Line Settings' )
+i_c_sig         = input.color   ( #ffe600,        'Single',                                                   inline = '1',   group = 'Signal Line Settings' )
+i_c_sig_rise    = input.color   ( #00ff00,        'Dual Rising',                                              inline = '2',   group = 'Signal Line Settings' )
+i_c_sig_fall    = input.color   ( #ff0000,        'Dual Falling',                                             inline = '2',   group = 'Signal Line Settings' )
+i_WsigLine      = input.int     ( 2,                'Line Width',               minval=1, maxval=4,             inline = '2',   group = 'Signal Line Settings' )
+
+i_scaleHiOn     = input.bool    ( true,             '',                                                         inline = '0',   group = 'Scale Line Settings' )
+i_c_scaleHi     = input.color   ( color.fuchsia,  '',                                                         inline = '0',   group = 'Scale Line Settings' )
+i_scaleHi       = input.float   ( 100,              'Scale High',               minval=100, maxval=100,         inline = '0',   group = 'Scale Line Settings' )
+i_WscaleHi      = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '0',   group = 'Scale Line Settings' )
+
+i_alrtHiOn      = input.bool    ( true,             '',                                                         inline = '1',   group = 'Scale Line Settings' )
+i_c_alrtHi      = input.color   ( color.fuchsia,  '',                                                         inline = '1',   group = 'Scale Line Settings' )
+i_alrtHi        = input.float   ( 50,               'Upper Alert',              minval=-100, maxval=100,        inline = '1',   group = 'Scale Line Settings' )
+i_WalrtHi       = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '1',   group = 'Scale Line Settings' )
+
+i_midLineOn     = input.bool    ( true,             '',                                                         inline = '2',   group = 'Scale Line Settings' )
+i_c_midLine     = input.color   ( color.silver,   '',                                                         inline = '2',   group = 'Scale Line Settings' )
+i_midLine       = input.int     ( 0,                'Midline ....',             minval=0, maxval=0,             inline = '2',   group = 'Scale Line Settings' )
+i_Wmidline      = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '2',   group = 'Scale Line Settings' )
+
+i_alrtLoOn      = input.bool    ( true,             '',                                                         inline = '3',   group = 'Scale Line Settings' )
+i_c_alrtLo      = input.color   ( color.aqua,     '',                                                         inline = '3',   group = 'Scale Line Settings' )
+i_alrtLo        = input.float   ( -50,              'Lower Alert',              minval=-100, maxval=100,        inline = '3',   group = 'Scale Line Settings' )
+i_WalrtLo       = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '3',   group = 'Scale Line Settings' )
+
+i_scaleLoOn     = input.bool    ( true,             '',                                                         inline = '4',   group = 'Scale Line Settings' )
+i_c_scaleLo     = input.color   ( color.aqua,     '',                                                         inline = '4',   group = 'Scale Line Settings' )
+i_scaleLo       = input.float   ( -100,             'Scale Low',                minval=-100, maxval=-100,       inline = '4',   group = 'Scale Line Settings' )
+i_WscaleLo      = input.int     ( 1,                'Line Width',               minval=1, maxval=4,             inline = '4',   group = 'Scale Line Settings' )
+
+i_infoBox       = input.bool    ( true,             'Show Info Box',                                            inline = '0',   group = 'Information Panel' )
+i_alrtInfo      = input.bool    ( true,             'Show Alert Levels Info',                                   inline = '1',   group = 'Information Panel' )
+i_signalInfo    = input.bool    ( true,             'Show Signal Line Info',                                    inline = '1',   group = 'Information Panel' )
+i_lbl_txt_color = input.color   (#FFFFFF,         'Text',                                                     inline = '2',   group = 'Information Panel' )
+i_lbl_col_below = input.color   (#EF5350,         'TSI Falling',                                              inline = '3',   group = 'Information Panel' )
+i_lbl_col_above = input.color   (#26A69A,         'TSI Rising',                                               inline = '3',   group = 'Information Panel' )
+i_decimalP      = input.int     ( 2,                'Decimal Places',           minval=0, maxval=10,            inline = '4',   group = 'Information Panel' )
+i_boxOffSet     = input.int     ( 5,                'Info Box Offset',          minval=1, maxval=50,            inline = '4',   group = 'Information Panel' )
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Function Declarations
+
+f_delta ( P, X ) =>
+    X - P > 0
+
+alpha(len) =>
+     2 / (len + 1)
+
+      // Exponential weighted multiplier Function
+
+f_tsi(P, X, Y) =>
+    ema1 = ta.ema(P - P[1], X)
+    ema2 = ta.ema(ema1, Y)
+    ema3 = ta.ema(math.abs(P - P[1]), X)
+    ema4 = ta.ema(ema3, Y)
+    return_1 = 100 * (ema2 / ema4)
+    return_1
+
+     // True Strength Index Function
+
+f_reverse_tsi(P, W, X, Y) =>
+    Q = P[1]
+    A = alpha(X)
+    B = alpha(Y)
+    G = ta.ema(P - Q, X)[1]
+    H = ta.ema(G, Y)[1]
+    I = ta.ema(math.abs(P - Q), X)[1]
+    J = ta.ema(I, Y)[1]
+    positiveReturn = ( -A*B*I*W -A*B*Q*W -B*B*I*W +B*B*J*W +100*A*B*G +100*A*B*Q +100*B*B*G -100*B*B*H +2*B*I*W -2*B*J*W -200*B*G +200*B*H +J*W -100*H ) / ( -A*B*W + 100*A*B )
+    negativeReturn = ( -A*B*I*W +A*B*Q*W -B*B*I*W +B*B*J*W +100*A*B*G +100*A*B*Q +100*B*B*G -100*B*B*H +2*B*I*W -2*B*J*W -200*B*G +200*B*H +J*W -100*H ) / (  A*B*W + 100*A*B )
+    rawReturn = positiveReturn > P[1] ? positiveReturn : negativeReturn
+    return_2 = rawReturn > 0 ? rawReturn : 0
+    return_2
+
+    // Reverse True Strength Index function 
+    // returns closing price where the True Strength Index would equal input value "w".
+    // e.g. f_reverse_tsi ( i_src, 0, long, short) 
+    // would return the closing price which would make True Strength Index = 0
+    // the user can infer from this that....
+    // closing exactly at this price will cause the True Strength Index value to equal the input scale value
+    // closing above this price will cause the True Strength Index to cross above the input scale value
+    // closing below this price will cause the True Strength Index to cross below the input scale value
+    //
+    // We can also input the prior value of the TSI to give the TSI eq price value
+    // i.e. f_reverse_tsi ( i_src, TSI[1], long, short) 
+    // the user can infer from this that....
+    // closing exactly at this price will cause the True Strength Index value to stay the same as the previous TSI value
+    // closing above this price will cause the True Strength Index value to increase
+    // closing below this price will cause the True Strength Index value to decrease
+
+f_reverse_tsi_signal_cross(P, X, Y, Z) =>
+    Q = P[1]
+    TSI = f_tsi(P, X, Y)
+    TSI_Signal = ta.ema(TSI, Z)
+    A = alpha(X)
+    B = alpha(Y)
+    C = alpha(Z)
+    B2 = B * B
+    G = ta.ema(P - Q, X)[1]
+    H = ta.ema(G, Y)[1]
+    I = ta.ema(math.abs(P - Q), X)[1]
+    J = ta.ema(I, Y)[1]
+    K = ta.ema(TSI, Z)[1]
+    Wx = P - P[1] > 0 ? C * 100 * ((B * (A * (P - Q) + (1 - A) * G) + (1 - B) * (B * G + (1 - B) * H)) / (B * (A * (P - Q) + (1 - A) * I) + (1 - B) * (B * I + (1 - B) * J))) + (1 - C) * K : C * 100 * ((B * (A * (P - Q) + (1 - A) * G) + (1 - B) * (B * G + (1 - B) * H)) / (B * (A * -(P - Q) + (1 - A) * I) + (1 - B) * (B * I + (1 - B) * J))) + (1 - C) * K
+    W = Wx[1]
+    positiveReturn = (-A*B*C*I*K -A*B*C*K*Q -B2*C*I*K +B2*C*J*K +100*A*B*C*G +100*A*B*C*Q +A*B*I*K -A*B*I*W +A*B*K*Q -A*B*Q*W +100*B2*C*G -100*B2*C*H +B2*I*K -B2*I*W -B2*J*K +B2*J*W +2*B*C*I*K -2*B*C*J*K -200*B*C*G +200*B*C*H -2*B*I*K +2*B*I*W +2*B*J*K -2*B*J*W +C*J*K -100*C*H -J*K +J*W ) / (-A*B*C*K +100*A*B*C +A*B*K -A*B*W )
+    negativeReturn = (-A*B*C*I*K +A*B*C*K*Q -B2*C*I*K +B2*C*J*K +100*A*B*C*G +100*A*B*C*Q +A*B*I*K -A*B*I*W -A*B*K*Q +A*B*Q*W +100*B2*C*G -100*B2*C*H +B2*I*K -B2*I*W -B2*J*K +B2*J*W +2*B*C*I*K -2*B*C*J*K -200*B*C*G +200*B*C*H -2*B*I*K +2*B*I*W +2*B*J*K -2*B*J*W +C*J*K -100*C*H -J*K +J*W ) / ( A*B*C*K +100*A*B*C -A*B*K +A*B*W )
+    rawReturn = positiveReturn > P[1] ? positiveReturn : negativeReturn
+    return_3 = rawReturn > 0 ? rawReturn : 0
+    return_3
+
+     // Reverse True Strength Index signal line cross function 
+     // returns closing price where the True Strength Index would equal the signal line.
+     // the user can infer from this that....
+     // closing exactly at this price will cause the True Strength Index value to equal the signal line
+     // closing above this price will cause the True Strength Index to cross above the signal line
+     // closing below this price will cause the True Strength Index to cross below the signal line
+
+f_truncdNum(Val, DecPl) =>
+    Fact = math.pow(10, DecPl)
+    int(Val * Fact) / Fact
+
+    // decimal truncation
+
+f_zeroTest(X, D) =>
+    X > 0 ? str.tostring(f_truncdNum(X, D)) : 'Impossible'
+
+f_text_eq(p, x, d) =>
+    text_1 = p > x ? 'True Strength Index\n\n Continues Rising Above (eq) : ' + str.tostring(f_truncdNum(x, d)) : 'True Strength Index\n\n Continues Falling Below (Eq) :' + str.tostring(f_truncdNum(x, d))
+    text_1
+
+    // TSI (eq) text string function
+
+f_negVal ( X, D ) =>
+    X > 0 ? str.tostring(f_truncdNum(X, D)) : 'Impossible'
+
+f_crossText ( P, X, T, D ) =>
+    f_delta(P, X) ? 'Cross Above ' + T + ' : ' + f_negVal(X, D) + '\n' : 'Cross Below ' + T + ' : ' + f_negVal(X, D) + '\n'
+
+f_crosstext(p, t, x, d) =>
+    ema_text = p > x ? 'Cross Below ' + t + ' Line : ' + f_zeroTest(x, d) : 'Cross Above ' + t + ' Line : ' + f_zeroTest(x, d)
+    ema_text
+
+    // TSI line cross text string function
+
+f_label_text(P, A, B, D, V, W, X, Y, Z) =>
+    A and B ? f_text_eq(P, V, D) + '\n\n' + f_crosstext(P, 'Signal', W, D) + '\n\n' + f_crosstext(P, 'Upper Alert', X, D) + '\n\n' + f_crosstext(P, 'Zero', Y, D) + '\n\n' + f_crosstext(P, 'Lower Alert', Z, D) + '\n' : B ? f_text_eq(P, V, D) + '\n\n' + f_crosstext(P, 'Zero', Y, D) + '\n\n' + f_crosstext(P, 'Signal', W, D) + '\n' : f_text_eq(P, V, D) + '\n\n' + f_crosstext(P, 'Zero', Y, D) + '\n'
+
+    // TSI infobox text string combination function
+
+///////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+TSI                 = f_tsi         ( i_src, i_long_len, i_short_len )               // Get TSI value
+signalLine          = ta.ema        ( TSI, i_sigLength )                             // Get TSI signal line value
+TSI_eq              = f_reverse_tsi ( i_src, TSI[1], i_long_len, i_short_len )       // Get TSI eq price1
+TSI_hiLine_cross    = f_reverse_tsi ( i_src, i_alrtHi, i_long_len, i_short_len )     // Get TSI upper alert line cross price1
+TSI_zeroLine_cross  = f_reverse_tsi ( i_src, i_midLine, i_long_len, i_short_len )    // Get TSI zero line cross price1
+TSI_loLine_cross    = f_reverse_tsi ( i_src, i_alrtLo, i_long_len, i_short_len )     // Get TSI lower alert line cross price1
+TSI_signal_cross    = f_reverse_tsi_signal_cross ( i_src, i_long_len, i_short_len, i_sigLength )  // Get TSI signal line cross price1
+
+c_TSI               = i_c_typ_line == 'Single' ? i_c_line : TSI_eq < i_src ? i_c_line_rise : i_c_line_fall
+c_signal            = i_c_typ_sig  == 'Single' ? i_c_sig  : signalLine > signalLine[1] ? i_c_sig_rise  : i_c_sig_fall
+
+///////////////////////////////////////////////////////////////////////////////
+// Compute Info Label
+
+labelXLoc       = time_close + i_boxOffSet * ( time_close - time_close[1] )
+
+chandeEqText    = f_text_eq   ( i_src, TSI_eq, i_decimalP )
+crossZeroText   = f_crossText ( i_src, TSI_zeroLine_cross, 'Zero Line', i_decimalP )
+crossSignalText = i_signalInfo ? f_crossText ( i_src, TSI_signal_cross, 'Signal Line', i_decimalP ) + '\n' : na
+crossAlrtHiText = f_crossText ( i_src, TSI_hiLine_cross, 'Alert Hi', i_decimalP )
+crossAlrtLoText = f_crossText ( i_src, TSI_loLine_cross, 'Alert Lo', i_decimalP )
+
+infoPanelxText = i_alrtInfo ? chandeEqText + '\n\n' + crossSignalText + crossAlrtHiText + '\n' + crossZeroText + '\n' + crossAlrtLoText : chandeEqText + '\n\n' + crossSignalText + crossZeroText
+
+///////////////////////////////////////////////////////////////////////////////
+// Plots and fills
+
+hline ( i_scaleHiOn ? i_scaleHi  : na, 'Scale High Line', i_c_scaleHi, hline.style_solid, i_WscaleHi )
+hline ( i_alrtHiOn  ? i_alrtHi   : na, 'High Alert Line', i_c_alrtHi,  hline.style_dashed, i_WalrtHi )
+hline ( i_midLineOn ? i_midLine  : na, 'Midline',         i_c_midLine, hline.style_dashed, i_Wmidline )
+hline ( i_alrtLoOn  ? i_alrtLo   : na, 'Low Alert Line',  i_c_alrtLo,  hline.style_dashed, i_WalrtLo )
+hline ( i_scaleLoOn ? i_scaleLo  : na, 'Scale Low Line',  i_c_scaleLo, hline.style_solid, i_WscaleLo )
+
+plot  ( TSI,                         'True Strength Index', c_TSI,    i_p_w_line, plot.style_linebr )
+plot  ( i_sigLine ? signalLine : na, 'Signal Line',         c_signal, i_WsigLine, plot.style_linebr )
+
+label = i_infoBox ? label.new ( labelXLoc, TSI / 2, infoPanelxText, xloc.bar_time, yloc.price, TSI < TSI[1] ? i_lbl_col_below : i_lbl_col_above, label.style_label_left, i_lbl_txt_color, size=size.normal ) : na
+
+label.delete ( label[1] )  // Delete Previous Label
+
+///////////////////////////////////////////////////////////////////////////////
+// Development testing tools ( I have left these here for new coders to see how to easily verify the accuracy of this type of script )
+
+//bgcolor (( TSI_signal_cross > close and TSI < TSI_signalLine) or ( TSI_signal_cross < close and TSI > TSI_signalLine) ? na : color.red )
+//bgcolor (( TSI_hiLine_cross > close and TSI < i_hi_alert ) or ( TSI_hiLine_cross < close and TSI > i_hi_alert ) ? na : color.orange )
+//bgcolor (( TSI_zeroLine_cross > close and TSI < i_zero_line ) or ( TSI_zeroLine_cross < close and TSI > i_zero_line ) ? na : color.orange )
+//bgcolor (( TSI_loLine_cross > close and TSI < i_lo_alert ) or ( TSI_loLine_cross < close and TSI > i_lo_alert ) ? na : color.orange )
+
+///////////////////////////////////////////////////////////////////////////////
+// end
+

@@ -1,0 +1,7 @@
+Introducing the Reverse BTC Pi Market Cycle Top indicator
+
+Much respect to Philip Swift the original creator of this idea and big thanks to Tradingview author Ninorigo for sharing the script which this indicator is based on.
+
+Philip Swift has noted that:
+Using the x2 multiple of the 350 day moving average along with the 111 day moving average provides an interesting market cycle indicator.
+Over the past three market cycles, when the 350DMA x2 crosses below the 111DMA, Bitcoin price peaks in its market cycle, this has been accurate to within three days of Bitcoin price topping out.

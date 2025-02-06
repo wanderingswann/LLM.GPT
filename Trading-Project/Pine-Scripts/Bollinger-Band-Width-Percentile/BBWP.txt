@@ -1,0 +1,177 @@
+Introducing the Bollinger Band Width Percentile
+
+
+Definitions :
+
+Bollinger Band Width Percentile is derived from the Bollinger Band Width indicator.
+It shows the percentage of bars over a specified lookback period that the Bollinger Band Width was less than the current Bollinger Band Width.
+
+Bollinger Band Width is derived from the Bollinger Bands® indicator.
+It quantitatively measures the width between the Upper and Lower Bands of the Bollinger Bands.
+
+Bollinger Bands® is a volatility-based indicator.
+It consists of three lines which are plotted in relation to a security's price.
+The Middle Line is typically a Simple Moving Average.
+The Upper and Lower Bands are typically 2 standard deviations above, and below the SMA (Middle Line).
+
+Volatility is a statistical measure of the dispersion of returns for a given security or market index, measured by the standard deviation of logarithmic returns.
+
+
+The Broad Concept :
+
+Quoting Tradingview specifically for commonly noted limitations of the BBW indicator which I have based this indicator on....
+
+“Bollinger Bands Width (BBW) outputs a Percentage Difference between the Upper Band and the Lower Band.
+This value is used to define the narrowness of the bands.
+What needs to be understood however is that a trader cannot simply look at the BBW value and determine if the Band is truly narrow or not.
+The significance of an instruments relative narrowness changes depending on the instrument or security in question.
+What is considered narrow for one security may not be for another.
+What is considered narrow for one security may even change within the scope of the same security depending on the timeframe.
+In order to accurately gauge the significance of a narrowing of the bands, a technical analyst will need to research past BBW fluctuations and price performance to increase trading accuracy.”
+
+Here I present the Bollinger Band Width Percentile as a refinement of the BBW to somewhat overcome the limitations cited above.
+Much of the work researching past BBW fluctuations, and making relative comparisons is done naturally by calculating the Bollinger Band Width Percentile.
+This calculation also means that it can be read in a similar fashion across assets, greatly simplifying the interpretation of it.
+
+
+Plotted Components of the Bollinger Band Width Percentile indicator :
+
+    Scale High
+    Mid Line
+    Scale Low
+
+    BBWP plot
+    Moving Average 1
+    Moving Average 2
+
+    Extreme High Alert
+    Extreme Low Alert
+
+
+
+
+Bollinger Band Width Percentile Properties:
+
+BBWP Length
+The time period to be used in calculating the Moving average which creates the Basis for the BBW component of the BBWP.
+
+Basis Type
+The type of moving average to be used as the Basis for the BBW component of the BBWP.
+
+BBWP Lookback
+The lookback period to be used in calculating the BBWP itself.
+
+BBWP Plot settings
+The BBWP plot settings give a choice between a user defined solid color, and a choice of "Blue Green Red", or "Blue Red" spectrum palettes.
+
+Moving Averages
+Has 2 Optional User definable and adjustable moving averages of the BBWP.
+
+Visual Alerts
+Optional User adjustable High and low Signal columns.
+
+
+How to read the BBWP :
+
+    A BBWP read of 95 % ... means that the current BBW level is greater than 95% of the lookback period.
+    A BBWP read of 5 % .... means that the current BBW level is lower than 95% of the lookback period.
+
+
+
+Proposed interpretations :
+
+    When the BBWP gets above 90 % and particularly when it hits 100% ... this can be a signal that volatility is reaching a maximum and that a macro High or Low is about to be set.
+    When the BBWP gets below 10 % and particularly when it hits 0% ...... this can be a signal that volatility is reaching a minimum and that there could be a violent range breakout into a trending move.
+    When the BBWP hits a low level < 5 % and then gets above its moving average ...... this can be an early signal that a consolidation phase is ending and a trending move is beginning.
+    When the BBWP hits a high level > 95 % and then falls below its moving average ... this can be an early signal that a trending move is ending and a consolidation phase is beginning.
+
+
+
+Essential knowledge :
+The BBWP was designed with the daily timeframe in mind, but technical analysists may find use for it on other time frames also.
+High and Low BBWP readings do not entail any direction bias.
+
+
+Deeper Concepts :
+
+In finance, “mean reversion” is the assumption that a financial instrument's price will tend to move towards the average price over time.
+
+If we apply that same logic to volatility as represented here by the Bollinger band width percentile, the assumption is that the Bollinger band width percentile will tend to contract from extreme highs, and expand from extreme lows over time corresponding to repeated phases of contraction and expansion of volatility.
+
+It is clear that for most assets there are periods of directional trending behavior followed by periods of “consolidation” ( trading sideways in a range ).
+This often ends with a tightening range under reducing volume and volatility ( popularly known as “the squeeze” ).
+The squeeze typically ends with a “breakout” from the range characterized by a rapid increase in volume, and volatility when price action again trends directionally, and the cycle repeats.
+
+Typical Use Cases :
+
+The Bollinger Band Width Percentile may be especially useful for Options traders, as it can provide a bias for when Options are relatively expensive, or inexpensive from a Volatility (Vega) perspective.
+When the Bollinger Band Width Percentile is relatively high ( 85 percentile or above ) it may be more advantageous to be a net seller of Vega.
+When the Bollinger Band Width Percentile is relatively low ( 15 percentile or below ) it may be advantageous to be net long Vega.
+
+Here we examine a number of actionable signals on BTCUSD daily timeframe using the BBWP and a momentum oscillator ( using the TSI here but can equally be used with Bollinger bands, moving averages, or the traders preferred momentum oscillator ).
+
+In this first case we will examine how a spot trader and an options trader could each use a low BBWP read to alert them to a good potential trade setup.
+note: using a period of 30 for both the Bollinger bands and the BBWP period ( approximately a month ) and a BBWP lookback of 350 ( approximately a year )
+snapshot
+
+As we see the Bollinger Bands have gradually contracted while price action trended down and the BBWP also fell consistently while below its moving average ( denoting falling volatility ) down to an extremely low level <5% until it broke above its moving average along with a break of range to the upside ( signaling the end of the consolidation at a low level and the beginning of a new trending move to the upside with expanding volatility).
+
+
+
+In this next case we will continue to follow the price action presuming that the traders have taken or locked in profit at reasonable take profit levels from the previous trade setup.
+snapshot
+
+Here we see the contraction of the Bollinger bands, and the BBWP alongside price action breaking below the BB Basis giving a warning that the trending move to the upside is likely over.
+We then see the BBWP rising and getting above its moving average while price action fails to get above the BB Basis, likewise the TSI fails to get above its signal line and actually crosses below its zeroline.
+The trader would normally take this as a signal that the next trending move could be to the downside.
+The next trending move turns out to be a dramatic downside move which causes the BBWP to hit 100% signaling that volatility is likely to hit a maximum giving good opportunities for profitable trades to the skilled trader as outlined.
+
+
+Limitations :
+
+Here we will look at 2 cases where blindly taking BBWP signals could cause the trader to take a failed trade.
+
+In this first example we will look at blindly taking a low volatility options trade
+snapshot
+
+Low Volatility and corresponding low BBWP levels do not automatically mean there has to be expansion immediately, these periods of extreme low volatility can go on for quite some time.
+
+
+In this second example we will look at blindly taking a high volatility spot short trade
+snapshot
+
+High volatility and corresponding high BBWP levels do not automatically mean there has to be a macro high and contraction of volatility immediately, these periods of extreme high volatility can also go on for quite some time, hence the famous saying "The trend is your friend until the end of the trend" and lesser well known, but equally valid saying "never try to short the top of a parabolic blow off top"
+
+Markets are variable and past performance is no guarantee of future results, this is not financial advice, I am not a financial advisor.
+
+
+Final thoughts
+
+The BBWP is an improvement over the BBW in my opinion, and is a novel, and useful addition to a Technical Analysts toolkit.
+It is not a standalone indicator and is meant to be used in conjunction with other tools for direction bias, and Good Risk Management to base sound trades off.
+
+John Bollinger has suggested using Bolliger bands, and its related indicators with two or three other non-correlated indicators that provide more direct market signals.
+He believes it is crucial to use indicators based on different types of data.
+
+Some of his favored technical techniques are moving average divergence/convergence (MACD), on-balance volume and relative strength index (RSI).
+
+Thanks
+
+Massive respect to John Bollinger, long-time technician of the markets, and legendary creator of both the Bollinger Bands® in the 1980´s, and the Bollinger band Width indicator in 2010 which this indicator is based on.
+His work continues to inspire, decades after he brought the original Bollinger Bands to the market.
+Much respect also to Eric Crown who gave me the fundamental knowledge of Technical Analysis, and Options trading.
+Nov 1, 2021
+Release Notes
+Removed deprecated code.
+Updated to Pinescript Version 5
+Improved the BBWP calculation with new steps for more accurate early historical readings.
+Minor default value adjustments.
+Jan 23, 2023
+Release Notes
+
+Added further basis and moving average type options.
+Added improved line plot color selection options and method.
+Jan 23, 2023
+Release Notes
+Following user feedback added further color spectrum options to allow improved line plot color brightness.
+Added further function description labels.

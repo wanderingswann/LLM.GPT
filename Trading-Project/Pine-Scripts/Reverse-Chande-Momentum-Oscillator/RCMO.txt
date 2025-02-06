@@ -1,0 +1,68 @@
+Introducing the Caretakers Reverse Chande Momentum Oscillator.
+
+The Chande momentum oscillator is a technical momentum indicator which calculates the difference between the sum of recent gains and the sum of recent losses and then divides the result by the sum of all price movement over the same period.
+
+It is used to gauge “pure momentum”.
+It bears similarities to other momentum indicators such as the Stochastic, Rate of Change and the Relative Strength Index, but other unique features render it a handy tool in the traders handset.
+
+The CMO was developed by Tushar Chande.
+The author introduced the indicator in his 1994 book “The New Technical Trader “.
+The CMO has a normal range of values between +100 and -100.
+
+I have reverse engineered the CMO formula to derive a dual purpose function.
+
+The function can calculate the chart price at which the CMO will reach a particular CMO scale value.
+The function can also calculate the chart price at which the CMO will equal its previous value.
+
+I have employed this function here to give the price level where the CMO will equal :
+
+    Upper alert level ( default 50 )
+    Zero-Line
+    Lower alert level ( default -50 )
+    Previous CMO value
+
+
+
+These crossover levels are displayed via an optional infobox with choice of user selected info.
+
+The advantage of knowing the exact prices that this will happen should give the user an additional edge and precision in risk management.
+
+Traditionally traders and analysts will consider:
+
+*Positives values above 50 indicate an “overbought” condition
+*Negative values below -50 indicate an “oversold” condition
+
+Common traditional ways to derive signals from the CMO :
+
+    When the CMO crosses above the zeroline, a buy signal is generated.
+    When the CMO crosses below the zeroline, a sell signal is generated.
+
+    When the SMI crosses below -50 and then moves back above it, a buy signal is generated.
+    When the SMI crosses above +50 and then moves back below it, a sell signal is generated.
+
+
+Traditionally, traders also look for divergences between the CMO and price action.
+Chande Momentum oscillating in a narrower band around the zero line, with no penetration of the Overbought and Oversold levels indicates a ranging market.
+
+This should not be confused with Chande Momentum oscillating between either the Overbought and the zero line, or the Oversold level and the zero line, which indicates a strong up, or down-trend.
+
+It is traditionally considered that the strongest trend signals are from failed swing patterns.
+
+It measures momentum on both up and down days and does not smooth results, triggering more frequent oversold and overbought penetrations.
+
+The CMO is often used to determine overall market trendiness in conjunction with the SMI where the SMI is used to determine the direction of the trend, and also with volume indicators to show if the momentum carries significant selling or buying pressure.
+Mar 24, 2021
+Release Notes
+Some minor code tidy up and added above/below price result filtering to reverse function for consistent price display.
+
+Added some simple development testing tools ( as notes at the bottom ) for newer coders knowledge.
+Feb 9, 2023
+Release Notes
+Upgraded to Pinescript Version 5
+
+Added a signal line, added reverse engineered price for signal line crossover to info panel.
+Added new color setting options.
+Improved settings layout, added settings sections with headers.
+Feb 9, 2023
+Release Notes
+Code tidy up, minor default value setting changes, and added further explanatory notes.

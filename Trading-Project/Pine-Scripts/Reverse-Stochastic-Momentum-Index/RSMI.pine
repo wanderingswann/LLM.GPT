@@ -1,0 +1,192 @@
+// @version=5
+//
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// @author  = The_Caretaker
+// © The_Caretaker
+//
+// Much respect to Alex Orekhov (everget) for sharing the Stochastic Momentum Index script which I based this indicator on.
+// Greatly inspired by the prior works of Giorgos Siligardos, Dimitris Tsokakis and Johny Dough
+//
+// Here I have created a reverse Stochastic Momentum Index level function
+// and a reverse Stochastic Momentum Index signal line cross function
+// 
+// Feel free to reuse or develop this script further, please drop me a note below if you find it useful.
+//
+
+indicator ( 'Reverse Stochastic Momentum Index', 'RSMI', false )
+
+//////////////////////////////////////////////////////////////////////////////
+// Inputs and global variable declarations
+
+i_srcPrice      = input.source  ( close,          'Price Source',                                                                                   inline = '0',     group = 'SMI Properties')
+i_SMI_len       = input.int     ( 13,             'SMI Length',                 minval=1,                                                           inline = '1',     group = 'SMI Properties')
+i_smth1         = input.int     ( 25,             'Smooth 1',                   minval=1,                                                           inline = '2',     group = 'SMI Properties')
+i_smth2         = input.int     ( 2,              'Smooth 2',                   minval=1,                                                           inline = '3',     group = 'SMI Properties')
+
+i_SMIOn         = input.bool    ( true,           'Show SMI',                                                                                       inline = '0',     group = 'SMI Line Plot Settings')
+i_c_typ_line    = input.string  ( 'Dual',         'Color Type',                 options=[ 'Single', 'Dual' ],                                       inline = '1',     group = 'SMI Line Plot Settings')
+i_c_line        = input.color   ( #0000ff,      'Single Color',                                                                                   inline = '2',     group = 'SMI Line Plot Settings')
+i_c_line_rise   = input.color   ( #00ff00,      'Dual Color (Rising)',                                                                            inline = '3',     group = 'SMI Line Plot Settings')
+i_c_Line_fall   = input.color   ( #ff0000,      'Dual Color (Falling)',                                                                           inline = '3',     group = 'SMI Line Plot Settings')
+i_p_width_line  = input.int     ( 2,              'Line Width',                 minval=1, maxval=4,                                                 inline = '4',     group = 'SMI Line Plot Settings')
+
+i_sigOn         = input.bool    ( true,           'Show Signal Line',                                                                               inline = '1',     group = 'Signal Line Plot Settings')
+i_sigLen        = input.int     ( 12,             'MA Length',                  minval=1,                                                           inline = '2',     group = 'Signal Line Plot Settings')
+i_c_typ_sig     = input.string  ( 'Dual',         'Color Type',                 options=[ 'Single', 'Dual' ],                                       inline = '3',     group = 'Signal Line Plot Settings')
+i_c_sig         = input.color   ( #ffffff,      'Single Color',                                                                                   inline = '3',     group = 'Signal Line Plot Settings')
+i_c_sig_rise    = input.color   ( #00ff00,      'Dual Color (Rising)',                                                                            inline = '4',     group = 'Signal Line Plot Settings')
+i_c_sig_fall    = input.color   ( #ff0000,      'Dual Color (Falling)',                                                                           inline = '4',     group = 'Signal Line Plot Settings')
+i_p_width_sig   = input.int     ( 2,              'Line Width',                 minval=1, maxval=4,                                                 inline = '5',     group = 'Signal Line Plot Settings')
+
+i_histoOn       = input.bool    ( true,           'Show Histogram',                                                                                 inline = '1',     group = 'Histogram Settings')
+i_histoFact     = input.int     ( 1,              'Histogram Scaling Factor',   minval=0, maxval=10,                                                inline = '2',     group = 'Histogram Settings')
+i_c_hist_Urise  = input.color   ( #26A69A,      'Upper Rising',                                                                                   inline = '3',     group = 'Histogram Settings')
+i_c_hist_Ufall  = input.color   ( #B2DFDB,      'Upper Falling',                                                                                  inline = '3',     group = 'Histogram Settings')
+i_c_hist_Lrise  = input.color   ( #EF5350,      'Lower Falling',                                                                                  inline = '4',     group = 'Histogram Settings')
+i_c_hist_Lfall  = input.color   ( #FFCDD2,      'Lower Rising',                                                                                   inline = '4',     group = 'Histogram Settings')
+
+i_c_scale_hi    = input.color   ( #e600ff,      'Scale High',                                                                                     inline = '1',     group = 'Scale Settings')
+i_alrtHi        = input.float   ( 40,             'Alert Hi',                   minval=-100, maxval=100,                                            inline = '2',     group = 'Scale Settings')
+i_c_alert_hi    = input.color   ( #909090,      '',                                                                                               inline = '2',     group = 'Scale Settings')
+i_midLine       = input.int     ( 0,              'Mid-line',                   minval=-100, maxval=100,                                            inline = '3',     group = 'Scale Settings')
+i_c_midline     = input.color   ( #909090,      '',                                                                                               inline = '3',     group = 'Scale Settings')
+i_alrtLo        = input.float   ( -40,            'Alert Lo',                   minval=-100, maxval=100,                                            inline = '4',     group = 'Scale Settings')
+i_c_alert_lo    = input.color   ( #909090,      '',                                                                                               inline = '4',     group = 'Scale Settings')
+i_c_scale_lo    = input.color   ( #00ccff,      'Scale Low',                                                                                      inline = '5',     group = 'Scale Settings')
+i_alrtLines     = input.bool    ( true,           'Show Alert Level Lines',                                                                         inline = '6',     group = 'Scale Settings')
+
+i_fillOn        = input.bool    ( true,           'Show Fill',                                                                                      inline = '1',     group = 'Fill Settings')
+i_c_fill_rise   = input.color   ( #00ff0050,    'Fill Rising',                                                                                    inline = '2',     group = 'Fill Settings')
+i_c_fill_fall   = input.color   ( #ff000052,    'Fill Falling',                                                                                   inline = '3',     group = 'Fill Settings')
+i_c_fill_transp = input.int     ( 50,             'Fill Transparency',          minval=0, maxval=100,                                               inline = '4',     group = 'Fill Settings')
+
+i_infoBox       = input.bool    ( true,           'Show Info Box',                                                                                  inline = '1',     group = 'Info Box Settings')
+i_alrtInfo      = input.bool    ( true,           'Show Alert Levels Info',                                                                         inline = '2',     group = 'Info Box Settings')
+i_decimalP      = input.int     ( 2,              'Decimal Places',             minval=0, maxval=10,                                                inline = '3',     group = 'Info Box Settings')
+i_boxOffSet     = input.int     ( 5,              'Info Box Offset',            minval=1, maxval=50,                                                inline = '4',     group = 'Info Box Settings')
+
+ScaleHi = 100
+ScaleLo = -100
+
+var label Infobox = na
+
+///////////////////////////////////////////////////////////////////////////////
+// Declare Functions
+
+f_truncdNum(Val, DecPl) =>
+    Fact = math.pow(10, DecPl)
+    int(Val * Fact) / Fact
+
+     // decimal truncation
+
+a(x) =>
+    2 / (x + 1)
+
+     // exponentially weighted multiplier
+
+f_reverse_SMI(P, U, W, X, Y, Z) =>
+    V = 0.5
+    H = ta.highest(W)
+    L = ta.lowest(W)
+    D = ta.ema(P - V * (H + L), X)[1]
+    E = ta.ema(a(X) * (P - V * (H + L)) + D - D * a(X), Y)[1]
+    F = ta.ema(H - L, X)[1]
+    G = ta.ema(a(X) * (H - L) + F * (1 - a(X)), Y)[1]
+    J = 100 * (a(Y) * (a(X) * (P - V * (H + L)) + D - D * a(X)) + E * (1 - a(Y))) / (V * (a(Y) * (a(X) * (H - L) + F * (1 - a(X))) + G * (1 - a(Y))))[1]
+    K = ta.ema(100 * (a(Y) * (a(X) * (P - V * (H + L)) + D - D * a(X)) + E * (1 - a(Y))) / (V * (a(Y) * (a(X) * (H - L) + F * (1 - a(X))) + G * (1 - a(Y)))), Z)[1]
+    return_1 = (V * U * (a(Y) * a(X) * H - a(Y) * a(X) * L - a(Y) * F * a(X) + a(Y) * F - G * a(Y) + G) + 100 * (a(Y) * a(X) * V * H + a(Y) * a(X) * V * L - a(Y) * D + a(Y) * D * a(X) + E * a(Y) - E)) / (100 * a(Y) * a(X))
+    return_1
+
+     // returns price where Stochastic Momentum Index is equal to input value "U"
+     // e.g. f_reverse_SMI ( close, 0, 13, 25, 2, 12 ) 
+     // would return the next closing price which would make SMI = 0
+
+f_reverse_SMI_cross(P, W, X, Y, Z) =>
+    V = 0.5
+    H = ta.highest(W)
+    L = ta.lowest(W)
+    D = ta.ema(P - V * (H + L), X)[1]
+    E = ta.ema(a(X) * (P - V * (H + L)) + D - D * a(X), Y)[1]
+    F = ta.ema(H - L, X)[1]
+    G = ta.ema(a(X) * (H - L) + F * (1 - a(X)), Y)[1]
+    J = 100 * (a(Y) * (a(X) * (P - V * (H + L)) + D - D * a(X)) + E * (1 - a(Y))) / (V * (a(Y) * (a(X) * (H - L) + F * (1 - a(X))) + G * (1 - a(Y))))[1]
+    K = ta.ema(100 * (a(Y) * (a(X) * (P - V * (H + L)) + D - D * a(X)) + E * (1 - a(Y))) / (V * (a(Y) * (a(X) * (H - L) + F * (1 - a(X))) + G * (1 - a(Y)))), Z)[1]
+    return_2 = (a(Y) * (100 * (a(Z) * (-a(X) * V * H - a(X) * V * L + D - D * a(X) - a(X) - E) + a(X) * V * H + a(X) * V * L - D + D * a(X) + E) + V * K * (a(X) * (-H * a(Z) + H + L * a(Z) - L + F * a(Z) - F) - F * a(Z) + F + G * a(Z) - G)) + 100 * (a(Z) * E - E) - V * K * G * a(Z) + V * K * G) / (100 * a(Y) * a(X) * (-a(Z) + 1))
+    return_2
+
+     // returns price where Stochastic Momentum Index is equal to the signal line
+     // the user can infer from this that 
+     // closing above this price will cause the Stochastic Momentum Index to cross above the signal line
+     // and closing below it will cause the Stochastic Momentum Index to cross below the signal line 
+
+f_delta ( P, X ) =>
+    X - P > 0
+
+f_negVal ( X, D ) =>
+    X > 0 ? str.tostring ( f_truncdNum ( X, D )) : 'Impossible'
+
+text_eq ( p, x, d ) =>
+    p > x ? 'Continues Rising Above (eq) : ' + str.tostring ( int ( x * math.pow ( 10, d )) / math.pow ( 10, d )) : 'Continues Falling Below (Eq) :' + str.tostring ( int ( x * math.pow ( 10, d )) / math.pow ( 10, d ))
+
+f_crossText ( P, X, T, D ) =>
+    f_delta ( P, X ) ? 'Cross Above ' + T + ' : ' + f_negVal ( X, D ) + '\n' : 'Cross Below ' + T + ' : ' + f_negVal ( X, D ) + '\n'
+
+//////////////////////////////////////////////////////////////////////////////
+// Calculations
+
+SMINumerator    = ta.ema ( ta.ema ( i_srcPrice - 0.5 * ( ta.highest (i_SMI_len) + ta.lowest (i_SMI_len) ), i_smth1 ), i_smth2 )
+SMIDenominator  = 0.5 * ta.ema ( ta.ema ( ta.highest (i_SMI_len) - ta.lowest (i_SMI_len), i_smth1 ), i_smth2 )
+SMI             = 100 * SMINumerator / SMIDenominator
+signal          = ta.ema ( SMI, i_sigLen )
+hist            = SMI - signal
+histColor       = hist >= 0 ? hist[1] < hist ? i_c_hist_Urise : i_c_hist_Ufall : hist[1] > hist ? i_c_hist_Lrise : i_c_hist_Lfall
+SMI_eq          = f_reverse_SMI ( i_srcPrice, SMI[1], i_SMI_len, i_smth1, i_smth2, i_sigLen )
+alrtHilineCross = f_reverse_SMI ( i_srcPrice, i_alrtHi, i_SMI_len, i_smth1, i_smth2, i_sigLen )
+zerolineCross   = f_reverse_SMI ( i_srcPrice, 0, i_SMI_len, i_smth1, i_smth2, i_sigLen )
+alrtLolineCross = f_reverse_SMI ( i_srcPrice, i_alrtLo, i_SMI_len, i_smth1, i_smth2, i_sigLen )
+signalCross     = f_reverse_SMI_cross ( i_srcPrice, i_SMI_len, i_smth1, i_smth2, i_sigLen )
+c_SMI           = i_c_typ_line == 'Single' ? i_c_line : SMI > SMI[1] ? i_c_line_rise : i_c_Line_fall
+c_sig           = i_c_typ_sig == 'Single' ? i_c_sig : signal > signal[1] ? i_c_sig_rise : i_c_sig_fall
+c_fill_rise     = color.new ( i_c_fill_rise, i_c_fill_transp )
+c_fill_fall     = color.new ( i_c_fill_fall, i_c_fill_transp )
+
+///////////////////////////////////////////////////////////////////////////////
+// Compute Info Label
+
+labelXLoc       = time_close + i_boxOffSet * ( time_close - time_close[1] )
+crossSignalText = f_crossText ( i_srcPrice, signalCross, 'Signal Line', i_decimalP )
+SMIeq           = text_eq ( i_srcPrice, SMI_eq, i_decimalP )
+crossZeroText   = f_crossText ( i_srcPrice, zerolineCross, 'Zero Line', i_decimalP )
+crossAlrtHiText = f_crossText ( i_srcPrice, alrtHilineCross, 'Alert Hi', i_decimalP )
+crossAlrtLoText = f_crossText ( i_srcPrice, alrtLolineCross, 'Alert Lo', i_decimalP )
+infoBoxText     = i_alrtInfo ? 'SMI\n\n' + SMIeq + '\n\n' + crossAlrtHiText + '\n' + crossSignalText + '\n' + crossZeroText + '\n' + crossAlrtLoText : 'SMI\n\n' + SMIeq + '\n\n' + crossSignalText + '\n' + crossZeroText
+
+///////////////////////////////////////////////////////////////////////////////
+// InfoBox Plot
+
+if i_infoBox
+    Infobox := label.new ( labelXLoc, 0, infoBoxText, xloc.bar_time, yloc.price, #000000ff, label.style_label_left, color.white )
+    Infobox
+    label.delete(Infobox[1])
+
+///////////////////////////////////////////////////////////////////////////////
+// Plots & Fills
+
+p_SMIPlot       = plot ( i_SMIOn ? SMI : na, 'SMI Plot', c_SMI, i_p_width_line, plot.style_linebr )
+p_signalPlot    = plot ( i_sigOn ? signal : na, 'Signal Plot', c_sig, i_p_width_sig, plot.style_linebr )
+p_ScaleHiPlot   = hline ( ScaleHi, 'Scale High Line', i_c_scale_hi, hline.style_solid, 1 )
+p_MidLinePlot   = plot  ( i_midLine, 'Mid Line Line', i_c_midline, 1, plot.style_linebr )
+p_ScaleLoPlot   = hline ( ScaleLo, 'Scale Low Line', i_c_scale_lo, hline.style_solid, 1 )
+p_alertHi       = hline ( i_alrtLines ? i_alrtHi : na, 'Alert Level High Line', i_c_alert_hi, hline.style_dashed, 1 )
+p_alertLo       = hline ( i_alrtLines ? i_alrtLo : na, 'Alert Level Low Line', i_c_alert_lo, hline.style_dashed, 1 )
+
+plot ( i_histoOn ? hist * i_histoFact : na, 'Histogram', histColor, style=plot.style_columns )
+
+fill ( p_MidLinePlot, p_SMIPlot, i_SMIOn and i_fillOn and SMI > i_midLine ? c_fill_rise : na )
+fill ( p_MidLinePlot, p_SMIPlot, i_SMIOn and i_fillOn and SMI < i_midLine ? c_fill_fall : na )
+fill ( p_signalPlot, p_SMIPlot, i_SMIOn and i_fillOn and SMI > signal ? c_fill_rise : na )
+fill ( p_signalPlot, p_SMIPlot, i_SMIOn and i_fillOn and SMI < signal ? c_fill_fall : na )
+
+///////////////////////////////////////////////////////////////////////////////
+// End
+

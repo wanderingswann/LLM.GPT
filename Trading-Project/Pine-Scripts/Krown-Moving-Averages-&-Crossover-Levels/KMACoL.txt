@@ -1,0 +1,33 @@
+Introducing Krown Moving Averages with Crossover levels.
+
+This indicator
+
+Plots 5 Ema's and 3 SMA's ( Default Krown Periods )
+
+It calculates the price levels at which each pair of moving averages would be equal .
+
+That means that if price closes the other side of that level the pair of moving will cross also.
+
+These levels can therefore be considered as " crossover levels....( the price level where each pair of moving averages will cross)
+
+It can give crossover levels for
+
+    SMA crossing SMA
+    EMA crossing EMA
+    EMA crossing SMA
+
+    Plots optional Labels for all crossover levels....(off by default needs to be turned on in the settings)
+
+    Plots optional crossover levels as lines and dots colored as the 2 colors of the pair of moving averages.....(off by default needs to be turned on in the settings)
+
+    This indicator is aimed at traders who use simple and exponential moving average crossovers as part of their trading plan or edge.
+
+    It takes the guesswork out of knowing at what price level a pair of moving averages will cross which helps to improve entries and risk management.
+
+    There is an optional "Cutoff" function and user adjustable "limit factor" which cuts the plots off once they are too far below or above the current price to prevent chart auto focus issues.
+
+    There is a decimal place truncation option to set the decimal places depending on the asset type and price accuracy required.
+
+    Inspired by a request from a community member after one of my recent reverse engineered indicator publications.
+
+    I am publishing this open source in the hopes that some newer coders will find the functions interesting and useful.
